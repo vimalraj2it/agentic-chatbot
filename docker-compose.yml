@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=litellm
+      - POSTGRES_USER=litellm
+      - postgres_password=litellm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -u litellm -d litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    env_file:
+      - .docker.env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "--config", "/app/config.yaml", "--port", "4000" ]
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    env_file:
+      - .docker.env
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      - litellm
+    environment:
+      - LITELLM_PROXY_URL=http://litellm:4000
+      - USE_LITELLM_SERVER=True
+    command: >
+      sh -c "uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 & 
+             uv run streamlit run src/ui.py --server.port 8501 --server.address 0.0.0.0"
+
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

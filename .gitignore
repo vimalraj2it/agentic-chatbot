@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environment
+.env
+.docker.env
+*.env.*
+!.env.example
+
+# Next.js (web)
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+web/.env.local
+web/.env.production
+web/.env.development
+
+# Docker
+.docker_data/
+mongodb_data/
+postgres_data/
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Tool specific
+.playwright-mcp/
+uv.lock
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,18 @@
+   ▲ Next.js 15.1.0
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/chat/chat-message.tsx:28:32
+Type error: Type '{ children: string; className: string; }' is not assignable to type 'IntrinsicAttributes & Readonly<Options>'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & Readonly<Options>'.
+
+[0m [90m 26 |[39m                 )}[0m
+[0m [90m 27 |[39m             [33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 28 |[39m                 [33m<[39m[33mReactMarkdown[39m className[33m=[39m[32m"prose prose-sm dark:prose-invert break-words"[39m[33m>[39m[0m
+[0m [90m    |[39m                                [31m[1m^[22m[39m[0m
+[0m [90m 29 |[39m                     {content}[0m
+[0m [90m 30 |[39m                 [33m<[39m[33m/[39m[33mReactMarkdown[39m[33m>[39m[0m
+[0m [90m 31 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
