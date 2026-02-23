@@ -2,10 +2,16 @@
 
 import { useState, useCallback } from "react";
 
+export type MessageContent = string | Array<{
+    type: "text" | "image_url";
+    text?: string;
+    image_url?: { url: string };
+}>;
+
 export type Message = {
     id: string;
     role: "user" | "assistant" | "system";
-    content: string;
+    content: MessageContent;
 };
 
 interface UseChatbotOptions {
@@ -21,6 +27,7 @@ export function useChatbot({
 }: UseChatbotOptions = {}) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [input, setInput] = useState("");
+    const [pendingImages, setPendingImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     // If session_id changes, we could fetch history here if we wanted to 
@@ -34,16 +41,30 @@ export function useChatbot({
     const handleSubmit = useCallback(
         async (e?: React.FormEvent) => {
             e?.preventDefault();
-            if (!input.trim() || isLoading) return;
+            if ((!input.trim() && pendingImages.length === 0) || isLoading) return;
+
+            // Construct multi-modal content if images are present
+            let content: MessageContent = input;
+            if (pendingImages.length > 0) {
+                content = [
+                    { type: "text", text: input },
+                    ...pendingImages.map(img => ({
+                        type: "image_url" as const,
+                        image_url: { url: img }
+                    }))
+                ];
+            }
 
             const userMessage: Message = {
                 id: Date.now().toString(),
                 role: "user",
-                content: input,
+                content,
             };
 
+            const currentImages = [...pendingImages];
             setMessages((prev) => [...prev, userMessage]);
             setInput("");
+            setPendingImages([]);
             setIsLoading(true);
 
             const assistantMessageId = (Date.now() + 1).toString();
@@ -61,7 +82,8 @@ export function useChatbot({
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         ...body,
-                        messages: [...messages, userMessage],
+                        message: input,
+                        images: currentImages,
                     }),
                 });
 
@@ -137,6 +159,8 @@ export function useChatbot({
         messages,
         input,
         setInput,
+        pendingImages,
+        setPendingImages,
         handleInputChange,
         handleSubmit,
         isLoading,

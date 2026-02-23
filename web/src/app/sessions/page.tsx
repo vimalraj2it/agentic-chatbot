@@ -59,7 +59,7 @@ export default function SessionsPage() {
                     </div>
                     <div>
                         <h1 className="text-lg font-bold">My Chats</h1>
-                        <p className="text-[10px] text-muted-foreground">User ID: {user?.id.substr(0, 8)}...</p>
+                        <p className="text-[10px] text-muted-foreground">User ID: {user?.id?.substr(0, 8) || "N/A"}</p>
                     </div>
                 </div>
                 <button onClick={handleLogout} className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-all">

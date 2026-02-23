@@ -5,6 +5,7 @@ from datetime import datetime
 class ChatRequest(BaseModel):
     session_id: str
     message: str
+    images: Optional[List[str]] = None
     model: Optional[str] = None
 
 class ChatResponse(BaseModel):

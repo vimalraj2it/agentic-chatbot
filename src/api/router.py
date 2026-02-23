@@ -36,16 +36,26 @@ async def chat_endpoint(request: ChatRequest):
         # Get last 5 messages for LLM context
         history = await memory_service.get_history(request.session_id, limit=5)
         
+        # Construct multi-modal content if images are present
+        user_content = request.message
+        if request.images:
+            user_content = [{"type": "text", "text": request.message}]
+            for img_url in request.images:
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {"url": img_url}
+                })
+        
         initial_state = {
             "session_id": request.session_id,
-            "user_message": request.message,
+            "user_message": user_content,
             "model": request.model,
             "history": history
         }
         result = await graph.ainvoke(initial_state)
         
         # Persist messages
-        user_msg = await memory_service.add_message(request.session_id, "user", request.message)
+        user_msg = await memory_service.add_message(request.session_id, "user", user_content)
         assistant_msg = await memory_service.add_message(request.session_id, "assistant", result["assistant_response"])
         
         return ChatResponse(
@@ -63,7 +73,18 @@ async def chat_stream_endpoint(request: ChatRequest):
     logger.info(f"API: post /chat/stream - Session: {request.session_id}")
     try:
         history = await memory_service.get_history(request.session_id, limit=5)
-        messages = history + [{"role": "user", "content": request.message}]
+        
+        # Construct multi-modal content if images are present
+        user_content = request.message
+        if request.images:
+            user_content = [{"type": "text", "text": request.message}]
+            for img_url in request.images:
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {"url": img_url}
+                })
+        
+        messages = history + [{"role": "user", "content": user_content}]
         
         async def event_generator():
             full_response = ""
@@ -72,7 +93,7 @@ async def chat_stream_endpoint(request: ChatRequest):
                     full_response += chunk
                     yield f"data: {json.dumps({'chunk': chunk})}\n\n"
                 
-                user_msg = await memory_service.add_message(request.session_id, "user", request.message)
+                user_msg = await memory_service.add_message(request.session_id, "user", user_content)
                 assistant_msg = await memory_service.add_message(request.session_id, "assistant", full_response)
                 
                 # Send metadata with IDs

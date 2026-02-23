@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from datetime import datetime
 from src.core.database import db
 from src.core.logging_config import get_logger
@@ -39,9 +39,9 @@ class MemoryService:
             else:
                 history = messages[start:end]
         
-        return [{"id": m.get("id"), "role": m["role"], "content": m["content"]} for m in history]
+        return [{"id": m.get("id"), "role": m["role"], "content": m.get("content")} for m in history]
 
-    async def add_message(self, session_id: str, role: str, content: str) -> MessageDoc:
+    async def add_message(self, session_id: str, role: str, content: Any) -> MessageDoc:
         logger.info(f"Adding persistent message to session: {session_id}, role: {role}")
         message = MessageDoc(role=role, content=content)
         

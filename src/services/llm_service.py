@@ -6,7 +6,7 @@ from src.core.logging_config import get_logger
 logger = get_logger(__name__)
 
 async def get_chat_completion(
-    messages: List[Dict[str, str]], 
+    messages: List[Dict[str, Any]], 
     model: str = None,
     stream: bool = False
 ) -> Any:
@@ -15,6 +15,7 @@ async def get_chat_completion(
         selected_model = model or settings.DEFAULT_MODEL
         api_base = settings.LITELLM_PROXY_URL if settings.USE_LITELLM_SERVER else None
         
+        # LiteLLM already supports OpenAI-style multi-modal content blocks
         response = await litellm.acompletion(
             model=selected_model,
             messages=messages,
@@ -29,7 +30,7 @@ async def get_chat_completion(
         raise
 
 async def get_chat_stream(
-    messages: List[Dict[str, str]], 
+    messages: List[Dict[str, Any]], 
     model: str = None
 ) -> AsyncGenerator[str, None]:
     logger.info("Entering get_chat_stream")

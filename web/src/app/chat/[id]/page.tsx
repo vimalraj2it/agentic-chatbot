@@ -15,7 +15,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     const [hasMore, setHasMore] = useState(true);
     const router = useRouter();
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChatbot({
+    const {
+        messages,
+        input,
+        handleInputChange,
+        handleSubmit,
+        isLoading,
+        setMessages,
+        pendingImages,
+        setPendingImages
+    } = useChatbot({
         api: "/api/chat",
         body: {
             session_id: sessionId
@@ -98,7 +107,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                     <div>
                         <h1 className="text-lg font-bold tracking-tight">shadcn Chatbot</h1>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Session: {sessionId.substr(0, 8)}...</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Session: {sessionId?.substr(0, 8) || "New"}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -147,6 +156,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         onSubmit={handleSubmit}
                         isLoading={isLoading}
                         placeholder="Message AI..."
+                        pendingImages={pendingImages}
+                        onImageAdd={(img) => setPendingImages((prev) => [...prev, img])}
+                        onImageRemove={(index) => setPendingImages((prev) => prev.filter((_, i) => i !== index))}
                     />
                     <div className="flex justify-between items-center mt-6 px-1">
                         <div className="flex gap-3">

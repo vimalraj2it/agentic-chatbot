@@ -1,12 +1,12 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import uuid4
 
 class MessageDoc(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     role: str
-    content: str
+    content: Any
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class SessionDoc(BaseModel):
