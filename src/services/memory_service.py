@@ -61,10 +61,34 @@ class MemoryService:
         await self.sessions_col.insert_one(session.model_dump())
         return session.id
 
-    async def list_sessions(self, user_id: str) -> List[Dict]:
+    async def list_sessions(self, user_id: str, limit: int = 100) -> List[Dict]:
         logger.info(f"Listing sessions for user: {user_id}")
         cursor = self.sessions_col.find({"user_id": user_id}).sort("updated_at", -1)
-        sessions = await cursor.to_list(length=100)
+        sessions = await cursor.to_list(length=limit)
         return sessions
+
+    async def get_user_context(self, user_id: str) -> Dict[str, Any]:
+        """
+        Retrieves user info and summaries of the past 5 conversations.
+        """
+        logger.info(f"Retrieving context for user: {user_id}")
+        
+        # Get User Info
+        users_col = db.db["users"]
+        user_data = await users_col.find_one({"id": user_id})
+        
+        user_info = {
+            "name": user_data.get("name", "Anonymous") if user_data else "Anonymous",
+            "role": user_data.get("role", "User") if user_data else "User"
+        }
+        
+        # Get Past 5 Session Titles (Memory)
+        sessions = await self.list_sessions(user_id, limit=5)
+        past_conversations = [s.get("title", "Untitled Chat") for s in sessions]
+        
+        return {
+            "user_info": user_info,
+            "memory": past_conversations
+        }
 
 memory_service = MemoryService()

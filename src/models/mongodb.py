@@ -20,4 +20,6 @@ class SessionDoc(BaseModel):
 class UserDoc(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     mobile_number: str
+    name: Optional[str] = "Anonymous"
+    role: str = "User"
     created_at: datetime = Field(default_factory=datetime.utcnow)

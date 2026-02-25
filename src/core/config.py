@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     MONGODB_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "chat_app"
 
+    SYSTEM_RULES: str = """
+    You are a helpful and professional AI assistant.
+    Personalize your responses based on the user's name and role provided in the context.
+    Refer to their past conversation topics if relevant to maintain continuity.
+    Be concise but informative.
+    """
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

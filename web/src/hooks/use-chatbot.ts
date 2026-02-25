@@ -21,7 +21,7 @@ interface UseChatbotOptions {
 }
 
 export function useChatbot({
-    api = "/api/chat",
+    api,
     body = {},
     initialMessages = [],
 }: UseChatbotOptions = {}) {
@@ -29,6 +29,9 @@ export function useChatbot({
     const [input, setInput] = useState("");
     const [pendingImages, setPendingImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const chatApiUrl = api || `${baseUrl}/api/chat`;
 
     // If session_id changes, we could fetch history here if we wanted to 
     // keep logic in the hook, but for now we'll handle it in the Page component 
@@ -77,7 +80,7 @@ export function useChatbot({
             setMessages((prev) => [...prev, assistantMessage]);
 
             try {
-                const response = await fetch(api, {
+                const response = await fetch(chatApiUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -87,72 +90,61 @@ export function useChatbot({
                     }),
                 });
 
-                if (!response.ok) throw new Error("Failed to fetch");
+                if (!response.ok) throw new Error("Failed to submit chat request");
 
-                const contentType = response.headers.get("Content-Type");
+                const data = await response.json();
+                const taskId = data.task_id;
 
-                if (contentType?.includes("application/json")) {
-                    const data = await response.json();
-                    setMessages((prev) =>
-                        prev.map((msg) => {
-                            if (msg.id === userMessage.id) return { ...msg, id: data.user_id };
-                            if (msg.id === assistantMessageId) return { ...msg, id: data.assistant_id, content: data.response };
-                            return msg;
-                        })
-                    );
-                } else {
-                    const reader = response.body?.getReader();
-                    if (!reader) throw new Error("No reader");
+                if (!taskId) throw new Error("No task_id received");
 
-                    const decoder = new TextDecoder();
-                    let fullContent = "";
+                // Polling logic
+                let attempts = 0;
+                const maxAttempts = 60; // 60 * 2s = 120s timeout
 
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split("\n");
-
-                        for (const line of lines) {
-                            if (line.startsWith("data: ")) {
-                                const dataStr = line.slice(6);
-                                if (dataStr === "[DONE]") continue;
-                                try {
-                                    const data = JSON.parse(dataStr);
-                                    if (data.chunk) {
-                                        fullContent += data.chunk;
-                                        setMessages((prev) =>
-                                            prev.map((msg) =>
-                                                msg.id === assistantMessageId
-                                                    ? { ...msg, content: fullContent }
-                                                    : msg
-                                            )
-                                        );
-                                    } else if (data.user_id && data.assistant_id) {
-                                        // Update IDs from metadata
-                                        setMessages((prev) =>
-                                            prev.map((msg) => {
-                                                if (msg.id === userMessage.id) return { ...msg, id: data.user_id };
-                                                if (msg.id === assistantMessageId) return { ...msg, id: data.assistant_id };
-                                                return msg;
-                                            })
-                                        );
-                                    }
-                                } catch (e) {
-                                    // Handle non-JSON chunks if any
-                                }
-                            }
-                        }
+                const pollStatus = async () => {
+                    if (attempts >= maxAttempts) {
+                        throw new Error("Polling timeout");
                     }
-                }
+
+                    const statusResponse = await fetch(`${baseUrl}/api/chat/status/${taskId}`);
+                    if (!statusResponse.ok) throw new Error("Failed to check status");
+
+                    const statusData = await statusResponse.json();
+
+                    if (statusData.status === "SUCCESS") {
+                        const result = statusData.result;
+                        setMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id === userMessage.id) return { ...msg, id: result.user_id || msg.id };
+                                if (msg.id === assistantMessageId) return { ...msg, content: result.response };
+                                return msg;
+                            })
+                        );
+                        setIsLoading(false);
+                        return;
+                    } else if (statusData.status === "FAILURE") {
+                        throw new Error(statusData.error || "Task failed");
+                    }
+
+                    attempts++;
+                    setTimeout(pollStatus, 2000); // Poll every 2 seconds
+                };
+
+                pollStatus();
+
             } catch (error) {
                 console.error("Chat Error:", error);
-            } finally {
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === assistantMessageId
+                            ? { ...msg, content: "Error: Failed to process your request." }
+                            : msg
+                    )
+                );
                 setIsLoading(false);
             }
         },
-        [input, isLoading, messages, api, body]
+        [input, isLoading, messages, chatApiUrl, baseUrl, body]
     );
 
     return {

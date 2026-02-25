@@ -4,6 +4,7 @@ from datetime import datetime
 
 class ChatRequest(BaseModel):
     session_id: str
+    user_id: str # Required for context injection
     message: str
     images: Optional[List[str]] = None
     model: Optional[str] = None
@@ -26,6 +27,8 @@ class LoginRequest(BaseModel):
 class UserResponse(BaseModel):
     id: str
     mobile_number: str
+    name: str
+    role: str
 
 # Session Schemas
 class SessionCreate(BaseModel):

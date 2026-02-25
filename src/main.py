@@ -17,6 +17,14 @@ setup_logging()
 async def lifespan(app: FastAPI):
     # Startup
     await db.connect_to_storage()
+    
+    # Generate Graph Visualization
+    try:
+        from src.services.graph_service import save_graph_visualization
+        save_graph_visualization()
+    except Exception as e:
+        print(f"Error generating graph: {e}")
+        
     yield
     # Shutdown
     await db.close_storage()

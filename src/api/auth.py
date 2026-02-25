@@ -21,6 +21,16 @@ async def login(request: LoginRequest):
         logger.info(f"Creating new user for mobile: {request.mobile_number}")
         user = UserDoc(mobile_number=request.mobile_number)
         await users_col.insert_one(user.model_dump())
-        return UserResponse(id=user.id, mobile_number=user.mobile_number)
+        return UserResponse(
+            id=user.id, 
+            mobile_number=user.mobile_number,
+            name=user.name,
+            role=user.role
+        )
     
-    return UserResponse(id=user_data["id"], mobile_number=user_data["mobile_number"])
+    return UserResponse(
+        id=user_data["id"], 
+        mobile_number=user_data["mobile_number"],
+        name=user_data.get("name", "Anonymous"),
+        role=user_data.get("role", "User")
+    )

@@ -15,6 +15,17 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     const [hasMore, setHasMore] = useState(true);
     const router = useRouter();
 
+    const [user, setUser] = useState<{ id: string } | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("chat_user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        } else {
+            router.push("/login");
+        }
+    }, [router]);
+
     const {
         messages,
         input,
@@ -27,7 +38,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     } = useChatbot({
         api: "/api/chat",
         body: {
-            session_id: sessionId
+            session_id: sessionId,
+            user_id: user?.id
         }
     });
 
@@ -35,12 +47,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
     useEffect(() => {
         if (!sessionId) return;
-        const storedUser = localStorage.getItem("chat_user");
-        if (!storedUser) {
-            router.push("/login");
-            return;
-        }
-
         // Fetch initial history for this session
         fetchHistory(0);
     }, [sessionId]);
