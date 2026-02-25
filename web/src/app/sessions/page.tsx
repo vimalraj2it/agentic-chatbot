@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bot, Plus, MessageSquare, Clock, LogOut } from "lucide-react";
+import { Bot, Plus, MessageSquare, Clock, LogOut, FileText } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 export default function SessionsPage() {
@@ -62,16 +62,26 @@ export default function SessionsPage() {
                         <p className="text-[10px] text-muted-foreground">User ID: {user?.id?.substr(0, 8) || "N/A"}</p>
                     </div>
                 </div>
-                <button onClick={handleLogout} className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-all">
-                    <LogOut size={20} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => router.push("/documents")}
+                        className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-all flex items-center gap-2"
+                        title="Document Management"
+                    >
+                        <FileText size={20} />
+                        <span className="hidden md:inline text-xs font-medium">Docs</span>
+                    </button>
+                    <button onClick={handleLogout} className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-all">
+                        <LogOut size={20} />
+                    </button>
+                </div>
             </header>
 
             <main className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <button
                         onClick={handleCreateSession}
-                        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-2xl hover:border-primary hover:bg-primary/5 transition-all space-y-4 group"
+                        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-2xl hover:border-primary hover:bg-primary/5 transition-all space-y-4 group min-h-[160px]"
                     >
                         <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Plus size={24} />
@@ -79,6 +89,19 @@ export default function SessionsPage() {
                         <div className="text-center">
                             <span className="font-bold block">New Chat Session</span>
                             <span className="text-sm text-muted-foreground">Start a fresh conversation</span>
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={() => router.push("/documents")}
+                        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-2xl hover:border-secondary hover:bg-secondary/5 transition-all space-y-4 group min-h-[160px]"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <FileText size={24} />
+                        </div>
+                        <div className="text-center">
+                            <span className="font-bold block">Document Library</span>
+                            <span className="text-sm text-muted-foreground">Manage PDF references & RAG</span>
                         </div>
                     </button>
 

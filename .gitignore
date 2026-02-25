@@ -44,3 +44,6 @@ uv.lock
 # OS
 .DS_Store
 Thumbs.db
+*.faiss
+/vector_store
+/vector_store

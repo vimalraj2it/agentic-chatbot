@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     CLASSIFIER_MODEL: str = "gpt-4o-mini"
     SMALLTALK_MODEL: str = "gpt-4o-mini"
     FAQ_MODEL: str = "gpt-4o"
+    RAG_TYPE: str = "text"
+    
+    EMBEDDING_MODEL: str = "BAAI/bge-small-en"
+    EMBEDDING_DEVICE: str = "cpu"
+    EMBEDDING_NORMALIZE: bool = True
     
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""

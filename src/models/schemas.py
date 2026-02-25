@@ -51,3 +51,18 @@ class SessionInfo(BaseModel):
 
 class SessionListResponse(BaseModel):
     sessions: List[SessionInfo]
+
+# Document Schemas
+class DocumentInfo(BaseModel):
+    id: str
+    filename: str
+    status: str
+    updated_at: datetime
+
+class DocumentListResponse(BaseModel):
+    documents: List[DocumentInfo]
+
+class DocumentUpdateResponse(BaseModel):
+    success: bool
+    message: str
+    status: Optional[str] = None

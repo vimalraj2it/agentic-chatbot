@@ -47,22 +47,6 @@ async def user_profile_node(state: AgentState) -> Dict[str, Any]:
     user_profile = prompt_service.render_template("user_profile.jinja2", **context_parts)
     return {"user_profile": user_profile}
 
-async def reference_docs_node(state: AgentState) -> Dict[str, Any]:
-    """Retrieves and renders reference documents"""
-    logger.info(f"Node: reference_docs_node - User: {state['user_id']}")
-    context = await memory_service.get_user_context(state["user_id"])
-    
-    context_parts = context_builder.build_context_dict(
-        user_info=context["user_info"],
-        memory=context["memory"],
-        app_state=state.get("app_state"),
-        referenced_data=state.get("referenced_data"),
-        files=state.get("files")
-    )
-    
-    reference_docs = prompt_service.render_template("reference_document.jinja2", **context_parts)
-    return {"reference_docs": reference_docs}
-
 async def load_memory_node(state: AgentState) -> Dict[str, Any]:
     """Retrieves last 5 messages for context"""
     logger.info(f"Node: load_memory_node - Session: {state['session_id']}")

@@ -3,12 +3,12 @@ name = "chat-app"
 version = "0.1.0"
 description = "Production-ready Web Chat Application"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi",
     "uvicorn",
-    "langchain",
-    "langgraph",
+    "langchain==1.2.10",
+    "langgraph==1.0.9",
     "litellm",
     "python-dotenv",
     "pydantic",
@@ -21,4 +21,10 @@ dependencies = [
     "dnspython>=2.8.0",
     "celery[redis]>=5.6.2",
     "redis>=6.4.0",
+    "faiss-cpu>=1.13.2",
+    "langchain-community>=0.4.1",
+    "pypdf>=6.7.3",
+    "sentence-transformers>=5.2.3",
+    "python-multipart>=0.0.22",
+    "langchain-huggingface>=1.2.0",
 ]

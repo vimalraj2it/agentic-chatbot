@@ -23,3 +23,11 @@ class UserDoc(BaseModel):
     name: Optional[str] = "Anonymous"
     role: str = "User"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DocumentDoc(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    filename: str
+    status: str = "unloaded" # unloaded, loaded, loading, error
+    file_path: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

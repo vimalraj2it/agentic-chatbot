@@ -25,5 +25,46 @@ export const apiClient = {
         });
         if (!res.ok) throw new Error("Failed to create session");
         return res.json();
+    },
+
+    async listDocuments() {
+        const res = await fetch(`${API_BASE}/api/documents/`);
+        if (!res.ok) throw new Error("Failed to fetch documents");
+        return res.json();
+    },
+
+    async uploadDocument(file: File) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`${API_BASE}/api/documents/upload`, {
+            method: "POST",
+            body: formData,
+        });
+        if (!res.ok) throw new Error("Failed to upload document");
+        return res.json();
+    },
+
+    async loadDocument(docId: string) {
+        const res = await fetch(`${API_BASE}/api/documents/${docId}/load`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to load document");
+        return res.json();
+    },
+
+    async unloadDocument(docId: string) {
+        const res = await fetch(`${API_BASE}/api/documents/${docId}/unload`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to unload document");
+        return res.json();
+    },
+
+    async reloadDocument(docId: string) {
+        const res = await fetch(`${API_BASE}/api/documents/${docId}/reload`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to reload document");
+        return res.json();
+    },
+
+    async deleteDocument(docId: string) {
+        const res = await fetch(`${API_BASE}/api/documents/${docId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete document");
+        return res.json();
     }
 };
