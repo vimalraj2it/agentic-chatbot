@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     DEFAULT_MODEL: str = "gpt-4o-mini"
+    CLASSIFIER_MODEL: str = "gpt-4o-mini"
+    SMALLTALK_MODEL: str = "gpt-4o-mini"
+    FAQ_MODEL: str = "gpt-4o"
     
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""

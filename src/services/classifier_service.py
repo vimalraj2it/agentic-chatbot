@@ -30,9 +30,10 @@ class ClassifierService:
             from src.services.llm_service import clean_messages
             cleaned_messages = clean_messages(messages)
             
+            from src.core.config import settings
             response = await get_chat_completion(
                 messages=cleaned_messages,
-                model=None, # Use default model
+                model=settings.CLASSIFIER_MODEL,
                 stream=False
             )
             
@@ -97,9 +98,10 @@ class ClassifierService:
         ]
         
         try:
+            from src.core.config import settings
             response = await get_chat_completion(
                 messages=messages,
-                model=None, # Use default model
+                model=settings.CLASSIFIER_MODEL,
                 stream=False
             )
             

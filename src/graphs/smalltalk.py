@@ -27,7 +27,8 @@ async def smalltalk_llm_node(state: AgentState):
     from src.services.llm_service import clean_messages
     cleaned_messages = clean_messages(messages)
     
-    response = await get_chat_completion(messages=cleaned_messages, model=state.get("model"))
+    from src.core.config import settings
+    response = await get_chat_completion(messages=cleaned_messages, model=settings.SMALLTALK_MODEL)
     content = response.choices[0].message.content
     return {"assistant_response": content}
 
