@@ -57,7 +57,7 @@ async def context_injection_node(state: AgentState) -> Dict[str, Any]:
     # Use PromptService to build structured split system prompts (4 messages)
     system_messages = prompt_service.build_split_system_prompt(
         context_parts=context_parts,
-        output_format="markdown",
+        output_format="json",
         use_cache=settings.ENABLE_PROMPT_CACHING
     )
     

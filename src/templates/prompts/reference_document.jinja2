@@ -1,0 +1,7 @@
+# REFERENCE DOCUMENT
+{{ reference_document | default("No specific reference documents provided.") }}
+
+{% if dynamic_context %}
+# ADDITIONAL DATA
+{{ dynamic_context }}
+{% endif %}

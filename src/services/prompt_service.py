@@ -20,8 +20,11 @@ class PromptService:
     
     def __init__(self):
         # Paths
-        self.template_dir = os.path.join(os.path.dirname(__file__), "..", "templates", "prompts")
-        config_path = os.path.join(self.template_dir, "prompt_config.json")
+        base_dir = os.path.dirname(__file__)
+        self.config_dir = os.path.join(base_dir, "..", "templates", "config")
+        self.template_dir = os.path.join(base_dir, "..", "templates", "prompts")
+        
+        config_path = os.path.join(self.config_dir, "prompt_config.json")
         
         # Load Config
         self.config = self._load_config(config_path)
@@ -101,7 +104,8 @@ class PromptService:
         return prompt_str
 
     def _build_fallback_prompt(self, template_data: Dict[str, Any]) -> str:
-        """Fallback Logic (same as original implementation)"""
+        """Fallback Logic when Jinja is unavailable."""
+        logger.warning("Using fallback system prompt (Jinja2 unavailable or failed)")
         sections = [
             "# ROLE & CORE RULES",
             template_data["system_rules"]
@@ -111,11 +115,10 @@ class PromptService:
             sections.append("# CONTEXT & DATA")
             sections.append(template_data["context_string"])
 
-        sections.append("# GUARDRAILS")
+        sections.append("# GUARDRAILS & RESPONSE FORMAT")
         guardrails_str = "\n".join([f"- {g}" for g in template_data["guardrails"]])
         sections.append(guardrails_str)
 
-        sections.append("# RESPONSE FORMATTING")
         if template_data["output_format"] == "json":
             sections.append("Response MUST be a valid JSON object. Do not include any text outside the JSON block.")
             sections.append("Format: {\"response\": \"your message here\"}")
@@ -132,56 +135,47 @@ class PromptService:
         use_cache: bool = False
     ) -> List[Dict[str, Any]]:
         """
-        Builds a list of 4 system messages as requested:
-        1 -> ROLE & CORE RULES
-        2 -> User Profile
-        3 -> GUARDRAILS & response Format 
-        4 -> Reference Document 
+        Builds a list of 4 system messages using modular Jinja2 templates:
+        1 -> ROLE & CORE RULES (role_rules.jinja2)
+        2 -> USER PROFILE (user_profile.jinja2)
+        3 -> GUARDRAILS & RESPONSE FORMAT (guardrails_format.jinja2)
+        4 -> REFERENCE DOCUMENT (reference_document.jinja2)
         """
         fmt = (output_format or self.config.get("output_format", "markdown")).lower()
         
-        # 1. ROLE & CORE RULES
-        m1 = {
-            "role": "system",
-            "content": f"# ROLE & CORE RULES\n{self.config.get('system_rules')}"
+        # Base data for all templates
+        base_data = {
+            "system_rules": self.config.get("system_rules"),
+            "guardrails": self.config.get("guardrails", []) + (guardrails or []),
+            "output_format": fmt,
+            **context_parts
         }
+
+        # Template mapping
+        template_map = [
+            ("role_rules.jinja2", "role_rules"),
+            ("user_profile.jinja2", "user_profile"),
+            ("guardrails_format.jinja2", "guardrails_format"),
+            ("reference_document.jinja2", "reference_document")
+        ]
+
+        messages = []
         
-        # 2. User Profile
-        profile_content = context_parts.get("user_profile", "User identity is anonymous.")
-        m2 = {
-            "role": "system",
-            "content": f"# USER PROFILE\n{profile_content}"
-        }
-        
-        # 3. GUARDRAILS & response Format
-        all_guardrails = self.config.get("guardrails", []) + (guardrails or [])
-        guardrails_str = "\n".join([f"- {g}" for g in all_guardrails])
-        
-        format_instructions = "Response should be in clean Markdown format."
-        if fmt == "json":
-            format_instructions = (
-                "Response MUST be a valid JSON object. Do not include any text outside the JSON block.\n"
-                "Format: {\"response\": \"your message here\"}"
-            )
-            
-        m3 = {
-            "role": "system",
-            "content": f"# GUARDRAILS & RESPONSE FORMAT\n{guardrails_str}\n\n{format_instructions}"
-        }
-        
-        # 4. Reference Document
-        ref_doc = context_parts.get("reference_document", "No specific reference documents provided.")
-        dynamic = context_parts.get("dynamic_context", "")
-        if dynamic:
-            ref_doc += f"\n\n# ADDITIONAL DATA\n{dynamic}"
-            
-        m4 = {
-            "role": "system",
-            "content": f"# REFERENCE DOCUMENT\n{ref_doc}"
-        }
-        
-        messages = [m1, m2, m3, m4]
-        
+        if self.env:
+            for t_name, _ in template_map:
+                try:
+                    template = self.env.get_template(t_name)
+                    content = template.render(**base_data).strip()
+                    messages.append({"role": "system", "content": content})
+                except Exception as e:
+                    logger.error(f"Error rendering {t_name}: {e}")
+                    # Fallback to a placeholder if template fails
+                    messages.append({"role": "system", "content": f"Error loading {t_name}"})
+        else:
+            # Basic fallback if Jinja is not available
+            logger.warning("Jinja not available, using basic split prompt fallback")
+            return self._build_basic_split_fallback(base_data)
+
         if use_cache:
             for m in messages:
                 m["content"] = [{
@@ -191,6 +185,26 @@ class PromptService:
                 }]
         
         return messages
+
+    def _build_basic_split_fallback(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Basic fallback logic when Jinja is unavailable."""
+        m1 = {"role": "system", "content": f"# ROLE & CORE RULES\n{data.get('system_rules')}"}
+        m2 = {"role": "system", "content": f"# USER PROFILE\n{data.get('user_profile', 'User identity is anonymous.')}"}
+        
+        guardrails_str = "\n".join([f"- {g}" for g in data.get('guardrails', [])])
+        fmt = data.get('output_format', 'markdown')
+        format_instr = "Response should be in clean Markdown format."
+        if fmt == "json":
+            format_instr = "Response MUST be a valid JSON object.\nFormat: {\"response\": \"your message here\"}"
+            
+        m3 = {"role": "system", "content": f"# GUARDRAILS & RESPONSE FORMAT\n{guardrails_str}\n\n{format_instr}"}
+        
+        ref = data.get('reference_document', 'No specific reference documents provided.')
+        if data.get('dynamic_context'):
+            ref += f"\n\n# ADDITIONAL DATA\n{data.get('dynamic_context')}"
+        m4 = {"role": "system", "content": f"# REFERENCE DOCUMENT\n{ref}"}
+        
+        return [m1, m2, m3, m4]
 
     def build_user_message(self, text: str, files: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """
