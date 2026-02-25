@@ -48,7 +48,7 @@ class PromptService:
                 "If you don't know the answer, state that clearly.",
                 "Respect the user's role and name if provided."
             ],
-            "output_format": "markdown"
+            "output_format": "json"
         }
         
         if os.path.exists(path):
@@ -62,70 +62,6 @@ class PromptService:
                 logger.error(f"Error loading prompt config JSON: {e}")
         
         return defaults
-
-    def build_system_prompt(
-        self, 
-        context_string: Optional[str] = "", 
-        guardrails: Optional[List[str]] = None,
-        output_format: Optional[str] = None,
-        use_cache: bool = False
-    ) -> Any:
-        """
-        Builds a structured system prompt using Jinja2 templates and JSON config.
-        If use_cache is True, returns a list content block for Anthropic caching.
-        """
-        fmt = (output_format or self.config.get("output_format", "markdown")).lower()
-        logger.info(f"Building system prompt with output_format={fmt}")
-        
-        template_data = {
-            "system_rules": self.config.get("system_rules"),
-            "context_string": context_string.strip() if context_string else "",
-            "guardrails": self.config.get("guardrails") + (guardrails or []),
-            "output_format": fmt
-        }
-
-        if self.env:
-            try:
-                template = self.env.get_template("system_prompt.jinja2")
-                prompt_str = template.render(**template_data)
-            except Exception as e:
-                logger.error(f"Error rendering Jinja template: {e}")
-                prompt_str = self._build_fallback_prompt(template_data)
-        else:
-            prompt_str = self._build_fallback_prompt(template_data)
-
-        if use_cache:
-            return [{
-                "type": "text", 
-                "text": prompt_str,
-                "cache_control": {"type": "ephemeral"}
-            }]
-            
-        return prompt_str
-
-    def _build_fallback_prompt(self, template_data: Dict[str, Any]) -> str:
-        """Fallback Logic when Jinja is unavailable."""
-        logger.warning("Using fallback system prompt (Jinja2 unavailable or failed)")
-        sections = [
-            "# ROLE & CORE RULES",
-            template_data["system_rules"]
-        ]
-
-        if template_data["context_string"]:
-            sections.append("# CONTEXT & DATA")
-            sections.append(template_data["context_string"])
-
-        sections.append("# GUARDRAILS & RESPONSE FORMAT")
-        guardrails_str = "\n".join([f"- {g}" for g in template_data["guardrails"]])
-        sections.append(guardrails_str)
-
-        if template_data["output_format"] == "json":
-            sections.append("Response MUST be a valid JSON object. Do not include any text outside the JSON block.")
-            sections.append("Format: {\"response\": \"your message here\"}")
-        else:
-            sections.append("Response should be in clean Markdown format.")
-
-        return "\n\n".join(sections)
 
     def build_split_system_prompt(
         self, 
@@ -141,7 +77,7 @@ class PromptService:
         3 -> GUARDRAILS & RESPONSE FORMAT (guardrails_format.jinja2)
         4 -> REFERENCE DOCUMENT (reference_document.jinja2)
         """
-        fmt = (output_format or self.config.get("output_format", "markdown")).lower()
+        fmt = (output_format or self.config.get("output_format", "json")).lower()
         
         # Base data for all templates
         base_data = {
@@ -192,7 +128,7 @@ class PromptService:
         m2 = {"role": "system", "content": f"# USER PROFILE\n{data.get('user_profile', 'User identity is anonymous.')}"}
         
         guardrails_str = "\n".join([f"- {g}" for g in data.get('guardrails', [])])
-        fmt = data.get('output_format', 'markdown')
+        fmt = data.get('output_format', 'json')
         format_instr = "Response should be in clean Markdown format."
         if fmt == "json":
             format_instr = "Response MUST be a valid JSON object.\nFormat: {\"response\": \"your message here\"}"
@@ -205,6 +141,41 @@ class PromptService:
         m4 = {"role": "system", "content": f"# REFERENCE DOCUMENT\n{ref}"}
         
         return [m1, m2, m3, m4]
+
+    def render_template(self, template_name: str, **data) -> str:
+        """Renders a single template by name."""
+        if not self.env:
+            return f"Template {template_name} cannot be rendered (Jinja not available)."
+        
+        try:
+            # Inject defaults if not present
+            if "guardrails" not in data:
+                data["guardrails"] = self.config.get("guardrails", [])
+            if "system_rules" not in data:
+                data["system_rules"] = self.config.get("system_rules", "")
+            if "output_format" not in data:
+                data["output_format"] = self.config.get("output_format", "json")
+                
+            template = self.env.get_template(template_name)
+            return template.render(**data).strip()
+        except Exception as e:
+            logger.error(f"Error rendering template {template_name}: {e}")
+            return f"Error loading {template_name}"
+
+    def build_classification_prompt(self, user_message: str, chat_history: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Builds a prompt for query classification."""
+        if self.env:
+            try:
+                template = self.env.get_template("classifier.jinja2")
+                return template.render(
+                    user_message=user_message,
+                    chat_history=chat_history or []
+                ).strip()
+            except Exception as e:
+                logger.error(f"Error rendering classifier template: {e}")
+        
+        # Fallback
+        return f"Classify the following user message into intent (smalltalk, faq), domain, safety, required_tools, and complexity_level. Return JSON.\n\nUser Message: {user_message}"
 
     def build_user_message(self, text: str, files: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """

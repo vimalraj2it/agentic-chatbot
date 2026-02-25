@@ -23,6 +23,13 @@ class StreamChunk(BaseModel):
 class StreamError(BaseModel):
     error: str
 
+class QueryClassification(BaseModel):
+    intent: str  # smalltalk, faq, not-able-classify, out-of-domain
+    domain: str  # general, technical, support, etc.
+    safety: str  # safe, unsafe
+    required_tools: List[str]
+    complexity_level: str  # low, medium, high
+
 # Authentication Schemas
 class LoginRequest(BaseModel):
     mobile_number: str

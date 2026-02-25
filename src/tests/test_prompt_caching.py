@@ -12,15 +12,18 @@ from src.core.database import db
 
 async def test_prompt_service_caching():
     print("--- Testing PromptService Caching ---")
-    system_content = prompt_service.build_system_prompt(
-        context_string="Test context",
+    system_messages = prompt_service.build_split_system_prompt(
+        context_parts={"reference_document": "Test context"},
         use_cache=True
     )
     
-    assert isinstance(system_content, list)
-    assert system_content[0]["type"] == "text"
-    assert "cache_control" in system_content[0]
-    assert system_content[0]["cache_control"]["type"] == "ephemeral"
+    # Check if first message is cached
+    assert isinstance(system_messages, list)
+    first_msg_content = system_messages[0]["content"]
+    assert isinstance(first_msg_content, list)
+    assert first_msg_content[0]["type"] == "text"
+    assert "cache_control" in first_msg_content[0]
+    assert first_msg_content[0]["cache_control"]["type"] == "ephemeral"
     print("✓ PromptService returns correctly structured cache_control block.")
 
 async def test_graph_node_caching():

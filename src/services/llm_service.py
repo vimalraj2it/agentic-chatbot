@@ -6,6 +6,20 @@ from src.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+def clean_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Standardizes messages for LiteLLM/OpenAI API by:
+    - Retaining only 'role' and 'content' fields.
+    - Removing extra fields like 'id' from persistent history.
+    """
+    cleaned = []
+    for msg in messages:
+        cleaned.append({
+            "role": msg.get("role"),
+            "content": msg.get("content")
+        })
+    return cleaned
+
 async def get_chat_completion(
     messages: List[Dict[str, Any]], 
     model: str = None,

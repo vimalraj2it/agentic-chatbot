@@ -5,26 +5,25 @@ import uvicorn
 import os
 
 from contextlib import asynccontextmanager
-from src.api.router import router as api_router
 from src.core.logging_config import setup_logging
+# Initialize logging FIRST before other local imports
+setup_logging()
+
+from src.api.router import router as api_router
 from src.core.config import settings
 from src.core.database import db
-
-# Initialize logging
-setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await db.connect_to_storage()
     
-    # Generate Graph Visualization
+    # Generate Graph Visualizations
     try:
-        from src.services.graph_service import save_graph_visualization
-        save_graph_visualization()
+        from src.services.graph_service import generate_all_visualizations
+        generate_all_visualizations()
     except Exception as e:
-        print(f"Error generating graph: {e}")
-        
+        print(f"Error generating graphs: {e}")
     yield
     # Shutdown
     await db.close_storage()
