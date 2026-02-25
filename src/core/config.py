@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     LITELLM_PROXY_URL: str = ""
     USE_LITELLM_SERVER: bool = False
     LITELLM_MASTER_KEY: str = ""
+    ENABLE_PROMPT_CACHING: bool = True
     
     MONGODB_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "chat_app"

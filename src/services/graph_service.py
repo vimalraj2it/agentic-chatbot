@@ -48,12 +48,19 @@ async def context_injection_node(state: AgentState) -> Dict[str, Any]:
     # Use PromptService to build structured system prompt
     system_content = prompt_service.build_system_prompt(
         context_string=enriched_context,
-        output_format="markdown" # Can be dynamic later
+        output_format="markdown", # Can be dynamic later
+        use_cache=settings.ENABLE_PROMPT_CACHING
     )
     
     # Role request logic
+    unknown_role_msg = "\nIMPORTANT: The user's specific professional role is unknown. Please specifically ask them what their role or profession is so you can better assist them.\n"
     if user_info.get("role") in ["User", "Anonymous", ""]:
-        system_content += "\nIMPORTANT: The user's specific professional role is unknown. Please specifically ask them what their role or profession is so you can better assist them.\n"
+        if isinstance(system_content, list):
+            # Append to the last text block OR add a new one (not cached if we want to follow Anthropic rules)
+            # For simplicity, we append to the text block inside the content list
+            system_content[-1]["text"] += unknown_role_msg
+        else:
+            system_content += unknown_role_msg
         
     system_msg = {"role": "system", "content": system_content}
     
@@ -170,7 +177,7 @@ def save_graph_visualization(output_dir: str = "graph"):
             mermaid_content = mermaid_content.replace("__end__", "__end__([<b>END</b>])", 1)
 
         # Debug log: show final structure of a few nodes
-        logger.info(f"Final Mermaid sample: {mermaid_content[:1000]}")
+       # logger.info(f"Final Mermaid sample: {mermaid_content[:1000]}")
 
         with open(os.path.join(output_dir, "flow.md"), "w") as f:
             f.write(f"```mermaid\n{mermaid_content}\n```")

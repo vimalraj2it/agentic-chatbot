@@ -64,10 +64,12 @@ class PromptService:
         self, 
         context_string: Optional[str] = "", 
         guardrails: Optional[List[str]] = None,
-        output_format: Optional[str] = None
-    ) -> str:
+        output_format: Optional[str] = None,
+        use_cache: bool = False
+    ) -> Any:
         """
         Builds a structured system prompt using Jinja2 templates and JSON config.
+        If use_cache is True, returns a list content block for Anthropic caching.
         """
         fmt = (output_format or self.config.get("output_format", "markdown")).lower()
         logger.info(f"Building system prompt with output_format={fmt}")
@@ -108,7 +110,16 @@ class PromptService:
         else:
             sections.append("Response should be in clean Markdown format.")
 
-        return "\n\n".join(sections)
+        prompt_str = "\n\n".join(sections)
+        
+        if use_cache:
+            return [{
+                "type": "text", 
+                "text": prompt_str,
+                "cache_control": {"type": "ephemeral"}
+            }]
+            
+        return prompt_str
 
     def build_user_message(self, text: str, files: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """
