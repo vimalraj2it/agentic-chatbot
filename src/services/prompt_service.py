@@ -84,12 +84,24 @@ class PromptService:
         if self.env:
             try:
                 template = self.env.get_template("system_prompt.jinja2")
-                return template.render(**template_data)
+                prompt_str = template.render(**template_data)
             except Exception as e:
                 logger.error(f"Error rendering Jinja template: {e}")
-                # Fallback to basic building logic if template fails
+                prompt_str = self._build_fallback_prompt(template_data)
+        else:
+            prompt_str = self._build_fallback_prompt(template_data)
 
-        # Fallback Logic (same as original implementation)
+        if use_cache:
+            return [{
+                "type": "text", 
+                "text": prompt_str,
+                "cache_control": {"type": "ephemeral"}
+            }]
+            
+        return prompt_str
+
+    def _build_fallback_prompt(self, template_data: Dict[str, Any]) -> str:
+        """Fallback Logic (same as original implementation)"""
         sections = [
             "# ROLE & CORE RULES",
             template_data["system_rules"]
@@ -110,16 +122,75 @@ class PromptService:
         else:
             sections.append("Response should be in clean Markdown format.")
 
-        prompt_str = "\n\n".join(sections)
+        return "\n\n".join(sections)
+
+    def build_split_system_prompt(
+        self, 
+        context_parts: Dict[str, str],
+        guardrails: Optional[List[str]] = None,
+        output_format: Optional[str] = None,
+        use_cache: bool = False
+    ) -> List[Dict[str, Any]]:
+        """
+        Builds a list of 4 system messages as requested:
+        1 -> ROLE & CORE RULES
+        2 -> User Profile
+        3 -> GUARDRAILS & response Format 
+        4 -> Reference Document 
+        """
+        fmt = (output_format or self.config.get("output_format", "markdown")).lower()
+        
+        # 1. ROLE & CORE RULES
+        m1 = {
+            "role": "system",
+            "content": f"# ROLE & CORE RULES\n{self.config.get('system_rules')}"
+        }
+        
+        # 2. User Profile
+        profile_content = context_parts.get("user_profile", "User identity is anonymous.")
+        m2 = {
+            "role": "system",
+            "content": f"# USER PROFILE\n{profile_content}"
+        }
+        
+        # 3. GUARDRAILS & response Format
+        all_guardrails = self.config.get("guardrails", []) + (guardrails or [])
+        guardrails_str = "\n".join([f"- {g}" for g in all_guardrails])
+        
+        format_instructions = "Response should be in clean Markdown format."
+        if fmt == "json":
+            format_instructions = (
+                "Response MUST be a valid JSON object. Do not include any text outside the JSON block.\n"
+                "Format: {\"response\": \"your message here\"}"
+            )
+            
+        m3 = {
+            "role": "system",
+            "content": f"# GUARDRAILS & RESPONSE FORMAT\n{guardrails_str}\n\n{format_instructions}"
+        }
+        
+        # 4. Reference Document
+        ref_doc = context_parts.get("reference_document", "No specific reference documents provided.")
+        dynamic = context_parts.get("dynamic_context", "")
+        if dynamic:
+            ref_doc += f"\n\n# ADDITIONAL DATA\n{dynamic}"
+            
+        m4 = {
+            "role": "system",
+            "content": f"# REFERENCE DOCUMENT\n{ref_doc}"
+        }
+        
+        messages = [m1, m2, m3, m4]
         
         if use_cache:
-            return [{
-                "type": "text", 
-                "text": prompt_str,
-                "cache_control": {"type": "ephemeral"}
-            }]
-            
-        return prompt_str
+            for m in messages:
+                m["content"] = [{
+                    "type": "text",
+                    "text": m["content"],
+                    "cache_control": {"type": "ephemeral"}
+                }]
+        
+        return messages
 
     def build_user_message(self, text: str, files: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """

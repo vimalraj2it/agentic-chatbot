@@ -7,5 +7,5 @@
         "Respect the user's role and name if provided.",
         "Always double-check financial figures before quoting them."
     ],
-    "output_format": "markdown"
+    "output_format": "json"
 }

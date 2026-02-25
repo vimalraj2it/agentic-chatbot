@@ -70,6 +70,45 @@ class ContextBuilder:
         return cls._reference_cache
 
     @classmethod
+    def build_context_dict(
+        cls,
+        user_info: Optional[Dict] = None,
+        memory: Optional[List[str]] = None,
+        app_state: Optional[Dict] = None,
+        referenced_data: Optional[List[Dict]] = None,
+        files: Optional[List[Dict]] = None
+    ) -> Dict[str, str]:
+        """
+        Builds a dictionary of different context parts for split system messages.
+        """
+        logger.info("Building context dictionary")
+        
+        # 1. Profile 
+        profile_parts = []
+        if user_info:
+            profile_parts.append(cls.format_user_profile(user_info))
+        if memory:
+            profile_parts.append(f"Past Conversation Topics: {', '.join(memory)}\n")
+        
+        # 2. Reference Document
+        ref_context = cls.load_reference_pdf()
+
+        # 3. Dynamic Context/Files
+        dynamic_parts = []
+        if app_state:
+            dynamic_parts.append(cls.format_app_state(app_state))
+        if referenced_data:
+            dynamic_parts.append(cls.format_database_rows(referenced_data))
+        if files:
+            dynamic_parts.append(cls.format_file_context(files))
+
+        return {
+            "user_profile": "\n".join(profile_parts) if profile_parts else "",
+            "reference_document": ref_context if ref_context else "",
+            "dynamic_context": "\n".join(dynamic_parts) if dynamic_parts else ""
+        }
+
+    @classmethod
     def build_combined_context(
         cls,
         user_info: Optional[Dict] = None,

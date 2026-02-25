@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from src.services.prompt_service import prompt_service
 from src.services.graph_service import context_injection_node, AgentState
 from src.core.config import settings
+from src.core.database import db
 
 async def test_prompt_service_caching():
     print("--- Testing PromptService Caching ---")
@@ -40,20 +41,24 @@ async def test_graph_node_caching():
         "files": []
     }
     
-    # We need to mock memory_service or at least ensure it doesn't crash
-    # Since we only care about the injection logic, we can try running it
+    # We need to ensure DB is connected for context_injection_node
     try:
+        await db.connect_to_storage()
         result = await context_injection_node(state)
         system_msg = result["history"][0]
         content = system_msg["content"]
         
         print(f"System Message Content Type: {type(content)}")
         assert isinstance(content, list)
+        assert content[0]["type"] == "text"
         assert "cache_control" in content[0]
         print("✓ context_injection_node correctly applies cache_control to system message.")
     except Exception as e:
-        print(f"Note: context_injection_node failed (likely due to DB/Memory dependencies: {e})")
-        print("Falling back to manual check of prompt_service integration in graph_service logic.")
+        print(f"Note: context_injection_node failed: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        await db.close_storage()
 
 if __name__ == "__main__":
     asyncio.run(test_prompt_service_caching())
