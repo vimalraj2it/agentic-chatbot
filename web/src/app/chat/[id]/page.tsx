@@ -36,7 +36,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         pendingImages,
         setPendingImages
     } = useChatbot({
-        api: "/api/chat",
         body: {
             session_id: sessionId,
             user_id: user?.id
@@ -167,7 +166,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         onImageRemove={(index) => setPendingImages((prev) => prev.filter((_, i) => i !== index))}
                     />
                     <div className="flex justify-between items-center mt-6 px-1">
-                        <div className="flex gap-3">
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Reference Context (PDF) Active</span>
+                            </div>
                             <div className="flex items-center gap-1.5">
                                 <Terminal size={12} className="text-muted-foreground" />
                                 <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">v2.1.0-shadcn</span>

@@ -1,6 +1,6 @@
 # Build & Run with Docker (Recommended)
 
-This mode runs the entire 3-tier stack (Next.js, FastAPI, Streamlit, and LiteLLM Proxy) in isolated containers.
+This mode runs the entire 3-tier stack (Next.js, FastAPI, Streamlit, and LiteLLM Proxy) in isolated containers. It includes Phase 3 features like **Context Injection** (PDF reference).
 
 ## 1. Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.

@@ -8,6 +8,9 @@ class ChatRequest(BaseModel):
     message: str
     images: Optional[List[str]] = None
     model: Optional[str] = None
+    app_state: Optional[Dict] = None
+    referenced_data: Optional[List[Dict]] = None
+    files: Optional[List[Dict]] = None
 
 class ChatResponse(BaseModel):
     response: str

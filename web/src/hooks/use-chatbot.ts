@@ -86,7 +86,6 @@ export function useChatbot({
                     body: JSON.stringify({
                         ...body,
                         message: input,
-                        images: currentImages,
                     }),
                 });
 

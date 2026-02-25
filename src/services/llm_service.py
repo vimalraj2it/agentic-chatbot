@@ -15,6 +15,8 @@ async def get_chat_completion(
         selected_model = model or settings.DEFAULT_MODEL
         api_base = settings.LITELLM_PROXY_URL if settings.USE_LITELLM_SERVER else None
         
+        logger.info(f"Using model  {selected_model} with api_base: {api_base} ")
+        logger.info(f"Messages : {messages}")
         # LiteLLM already supports OpenAI-style multi-modal content blocks
         response = await litellm.acompletion(
             model=selected_model,
@@ -37,7 +39,8 @@ async def get_chat_stream(
     try:
         selected_model = model or settings.DEFAULT_MODEL
         api_base = settings.LITELLM_PROXY_URL if settings.USE_LITELLM_SERVER else None
-        
+        logger.info(f"Using model  {selected_model} with api_base: {api_base} ")
+        logger.info(f"Stream Messages : {messages}")
         response = await litellm.acompletion(
             model=selected_model,
             messages=messages,
