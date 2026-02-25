@@ -1,0 +1,20 @@
+# ROLE & CORE RULES
+{{ system_rules }}
+
+{% if context_string %}
+# CONTEXT & DATA
+{{ context_string }}
+{% endif %}
+
+# GUARDRAILS
+{% for g in guardrails %}
+- {{ g }}
+{% endfor %}
+
+# RESPONSE FORMATTING
+{% if output_format == "json" %}
+Response MUST be a valid JSON object. Do not include any text outside the JSON block.
+Format: {"response": "your message here"}
+{% else %}
+Response should be in clean Markdown format.
+{% endif %}

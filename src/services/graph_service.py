@@ -8,6 +8,7 @@ from src.core.config import settings
 logger = get_logger(__name__)
 
 from src.services.context_builder import context_builder
+from src.services.prompt_service import prompt_service
 
 class AgentState(TypedDict):
     session_id: str
@@ -44,8 +45,11 @@ async def context_injection_node(state: AgentState) -> Dict[str, Any]:
         files=state.get("files")
     )
     
-    system_content = f"{settings.SYSTEM_RULES}\n\n"
-    system_content += enriched_context
+    # Use PromptService to build structured system prompt
+    system_content = prompt_service.build_system_prompt(
+        context_string=enriched_context,
+        output_format="markdown" # Can be dynamic later
+    )
     
     # Role request logic
     if user_info.get("role") in ["User", "Anonymous", ""]:

@@ -29,7 +29,8 @@ def process_chat_task(request_data: dict):
                 "streaming": False,
                 "app_state": request_data.get("app_state"),
                 "referenced_data": request_data.get("referenced_data"),
-                "files": request_data.get("files")
+                "files": request_data.get("files"),
+                "response_format": request_data.get("response_format")
             }
             
             # Invoke the graph

@@ -63,6 +63,15 @@ Control how the backend connects to LLMs via the `USE_LITELLM_SERVER` flag in yo
 ### Adding Models
 To add new models, simply update [**`litellm_config.yaml`**](file:///litellm_config.yaml) and restart the proxy service.
 
+## 🏗️ Development Phases
+
+The project evolves through the following stages:
+
+-   [**Phase 1 — Basic Chat**](file:///phase/phase1.md): Stateless request/response.
+-   [**Phase 2 — Chat + History**](file:///phase/phase2.md): Short-term memory & session management.
+-   [**Phase 3 — UI / App Context Injection**](file:///phase/phase3.md): File uploads & business context.
+-   [**Phase 4 — Prompt Templates**](file:///phase/phase4.md): Engineering reliability with structured templates.
+
 ## 📜 Repository Structure
 - `src/`: Core Python backend.
 - `web/`: Next.js frontend source.
