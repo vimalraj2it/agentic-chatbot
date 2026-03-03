@@ -11,6 +11,7 @@ graph TD;
 	gruadrail_node(gruadrail_node)
 	user_profile_node(user_profile_node)
 	load_memory_node(load_memory_node)
+	expansion_agent(expansion_agent)
 	classifier_agent(classifier_agent)
 	small_agent(small_agent)
 	faq_agent(faq_agent)
@@ -20,8 +21,9 @@ graph TD;
 	classifier_agent -.-> faq_agent;
 	classifier_agent -.-> out_of_domain_agent;
 	classifier_agent -.-> small_agent;
+	expansion_agent --> classifier_agent;
 	gruadrail_node --> user_profile_node;
-	load_memory_node --> classifier_agent;
+	load_memory_node --> expansion_agent;
 	role_injection_node --> gruadrail_node;
 	set_intent --> role_injection_node;
 	user_profile_node --> load_memory_node;

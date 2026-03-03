@@ -14,9 +14,9 @@ export const ChatMessage = ({ role, content }: ChatMessageProps) => {
     // Extract text and images from diverse content formats 
     const textContent = typeof content === "string"
         ? content
-        : content.find(c => c.type === "text")?.text || "";
+        : (Array.isArray(content) ? content.find(c => c.type === "text")?.text || "" : "");
 
-    const images = typeof content === "object" && Array.isArray(content)
+    const images = (typeof content === "object" && Array.isArray(content))
         ? content.filter(c => c.type === "image_url").map(c => c.image_url?.url)
         : [];
 

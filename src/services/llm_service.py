@@ -1,6 +1,6 @@
 import litellm
 import json
-from typing import List, Dict, Any, AsyncGenerator
+from typing import List, Dict, Any, AsyncGenerator, Optional
 from src.core.config import settings
 from src.core.logging_config import get_logger
 
@@ -23,19 +23,44 @@ def clean_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 async def get_chat_completion(
     messages: List[Dict[str, Any]], 
     model: str = None,
-    stream: bool = False
+    stream: bool = False,
+    response_format: Optional[Dict[str, Any]] = None,
+    **kwargs
 ) -> Any:
     logger.info("Entering get_chat_completion")
     try:
+        # Global message cleaning to remove extra fields like 'id' from persistent history
+        # Mistral and other providers reject unknown fields in the message object
+        cleaned_messages = clean_messages(messages)
+        
         selected_model = model or settings.DEFAULT_MODEL
         api_base = settings.LITELLM_PROXY_URL if settings.USE_LITELLM_SERVER else None
+        
+        # Determine API Key based on model provider if NOT using a proxy server 
+        if settings.USE_LITELLM_SERVER:
+            api_key = settings.LITELLM_MASTER_KEY
+        else:
+            if selected_model.startswith("mistral/"):
+                api_key = settings.MISTRAL_API_KEY
+            elif selected_model.startswith("gpt-"):
+                api_key = settings.OPENAI_API_KEY
+            elif selected_model.startswith("claude-"):
+                api_key = settings.ANTHROPIC_API_KEY
+            elif selected_model.startswith("gemini/"):
+                api_key = settings.GEMINI_API_KEY
+            elif selected_model.startswith("groq/"):
+                api_key = settings.GROQ_API_KEY
+            else:
+                api_key = settings.OPENAI_API_KEY # Default fallback 
 
         payload = {
             "model": selected_model,
-            "messages": messages,
+            "messages": cleaned_messages,
             "stream": stream,
             "api_base": api_base,
-            "api_key": settings.LITELLM_MASTER_KEY
+            "api_key": api_key,
+            "response_format": response_format,
+            **kwargs
         }
         logger.info("=== Full Request Payload ===")
         logger.info(json.dumps(payload, indent=2))
@@ -68,6 +93,7 @@ async def get_chat_completion(
                 f"Estimated Cost: ${cost:.6f}"
             )
 
+        logger.info(f"LLM Response Content: {response.choices[0].message.content}")
         logger.info("Exiting get_chat_completion successfully")
         return response
     except Exception as e:
@@ -76,20 +102,45 @@ async def get_chat_completion(
 
 async def get_chat_stream(
     messages: List[Dict[str, Any]], 
-    model: str = None
+    model: str = None,
+    response_format: Optional[Dict[str, Any]] = None,
+    **kwargs
 ) -> AsyncGenerator[str, None]:
     logger.info("Entering get_chat_stream")
     try:
+        # Global message cleaning to remove extra fields like 'id' from persistent history
+        # Mistral and other providers reject unknown fields in the message object
+        cleaned_messages = clean_messages(messages)
+        
         selected_model = model or settings.DEFAULT_MODEL
         api_base = settings.LITELLM_PROXY_URL if settings.USE_LITELLM_SERVER else None
         
+        # Determine API Key based on model provider if NOT using a proxy server 
+        if settings.USE_LITELLM_SERVER:
+            api_key = settings.LITELLM_MASTER_KEY
+        else:
+            if selected_model.startswith("mistral/"):
+                api_key = settings.MISTRAL_API_KEY
+            elif selected_model.startswith("gpt-"):
+                api_key = settings.OPENAI_API_KEY
+            elif selected_model.startswith("claude-"):
+                api_key = settings.ANTHROPIC_API_KEY
+            elif selected_model.startswith("gemini/"):
+                api_key = settings.GEMINI_API_KEY
+            elif selected_model.startswith("groq/"):
+                api_key = settings.GROQ_API_KEY
+            else:
+                api_key = settings.OPENAI_API_KEY # Default fallback 
+
         payload = {
             "model": selected_model,
-            "messages": messages,
+            "messages": cleaned_messages,
             "stream": True,
             "api_base": api_base,
-            "api_key": settings.LITELLM_MASTER_KEY,
-            "stream_options": {"include_usage": True}
+            "api_key": api_key,
+            "response_format": response_format,
+            "stream_options": {"include_usage": True},
+            **kwargs
         }
         logger.info("=== Full Request Payload ===")
         logger.info(json.dumps(payload, indent=2))
@@ -98,12 +149,16 @@ async def get_chat_stream(
         response = await litellm.acompletion(**payload)
         
         last_chunk = None
+        full_content = ""
         async for chunk in response:
             last_chunk = chunk
             if len(chunk.choices) > 0:
                 content = chunk.choices[0].delta.content
                 if content:
+                    full_content += content
                     yield content
+        
+        logger.info(f"LLM Stream Response Content: {full_content}")
         
         # Log Token Usage and Cost for stream
         if last_chunk and hasattr(last_chunk, "usage") and last_chunk.usage:

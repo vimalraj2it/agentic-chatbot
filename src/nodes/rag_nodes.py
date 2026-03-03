@@ -10,6 +10,9 @@ logger = get_logger(__name__)
 async def reference_docs_faiss_node(state: AgentState) -> Dict[str, Any]:
     """Retrieves and renders reference documents using FAISS"""
     logger.info(f"Node: reference_docs_faiss_node - User: {state['user_id']}")
+    if state.get("expanded_queries"):
+        queries_str = ", ".join([f"'{q['query']}' ({q['score']})" for q in state['expanded_queries']])
+        logger.info(f"Utilizing Expanded Queries for FAISS: {queries_str}")
     
     # Placeholder for FAISS-specific retrieval logic
     # In a real implementation, you would call a FAISS search service here
@@ -31,6 +34,9 @@ async def reference_docs_faiss_node(state: AgentState) -> Dict[str, Any]:
 async def reference_docs_pinecone_node(state: AgentState) -> Dict[str, Any]:
     """Retrieves and renders reference documents using Pinecone"""
     logger.info(f"Node: reference_docs_pinecone_node - User: {state['user_id']}")
+    if state.get("expanded_queries"):
+        queries_str = ", ".join([f"'{q['query']}' ({q['score']})" for q in state['expanded_queries']])
+        logger.info(f"Utilizing Expanded Queries for Pinecone: {queries_str}")
     
     # Placeholder for Pinecone-specific retrieval logic
     # In a real implementation, you would call a Pinecone search service here
@@ -52,6 +58,9 @@ async def reference_docs_pinecone_node(state: AgentState) -> Dict[str, Any]:
 async def reference_docs_node(state: AgentState) -> Dict[str, Any]:
     """Retrieves and renders reference documents (default text)"""
     logger.info(f"Node: reference_docs_node - User: {state['user_id']}")
+    if state.get("expanded_queries"):
+        queries_str = ", ".join([f"'{q['query']}' ({q['score']})" for q in state['expanded_queries']])
+        logger.info(f"Utilizing Expanded Queries for Default Text: {queries_str}")
     context = await memory_service.get_user_context(state["user_id"])
     
     context_parts = context_builder.build_context_dict(

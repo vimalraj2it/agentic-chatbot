@@ -19,3 +19,4 @@ class AgentState(TypedDict):
     guardrails: Optional[str]
     user_profile: Optional[str]
     reference_docs: Optional[str]
+    expanded_queries: Optional[List[Dict[str, Any]]]

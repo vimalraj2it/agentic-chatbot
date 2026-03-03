@@ -34,7 +34,15 @@ class ClassifierService:
             response = await get_chat_completion(
                 messages=cleaned_messages,
                 model=settings.CLASSIFIER_MODEL,
-                stream=False
+                stream=False,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "query_classification",
+                        "schema": QueryClassification.model_json_schema(),
+                        "strict": True
+                    }
+                }
             )
             
             content = response.choices[0].message.content
@@ -56,19 +64,15 @@ class ClassifierService:
                 except:
                     pass
             
-            data = json.loads(json_str)
-            
-            # Ensure required_tools is a list
-            if "required_tools" not in data or data["required_tools"] is None:
-                data["required_tools"] = []
-            
-            result = QueryClassification(**data)
+            result = QueryClassification.model_validate_json(json_str)
             logger.info(f"Parsed Classification: {result}")
             return result
             
         except Exception as e:
             logger.error(f"Error in query classification with messages: {e}")
+            from src.models.schemas import IntentScore
             return QueryClassification(
+                intents=[IntentScore(name="faq", score=1.0)],
                 intent="faq",
                 domain="general",
                 safety="safe",
@@ -102,7 +106,15 @@ class ClassifierService:
             response = await get_chat_completion(
                 messages=messages,
                 model=settings.CLASSIFIER_MODEL,
-                stream=False
+                stream=False,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "query_classification",
+                        "schema": QueryClassification.model_json_schema(),
+                        "strict": True
+                    }
+                }
             )
             
             content = response.choices[0].message.content
@@ -112,18 +124,14 @@ class ClassifierService:
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
             
-            data = json.loads(content)
-            
-            # Ensure required_tools is a list
-            if "required_tools" not in data or data["required_tools"] is None:
-                data["required_tools"] = []
-            
-            return QueryClassification(**data)
+            return QueryClassification.model_validate_json(content)
             
         except Exception as e:
             logger.error(f"Error in query classification: {e}")
+            from src.models.schemas import IntentScore
             # Fallback to a safe default
             return QueryClassification(
+                intents=[IntentScore(name="faq", score=1.0)],
                 intent="faq", # Default to faq to be safe (include context)
                 domain="general",
                 safety="safe",

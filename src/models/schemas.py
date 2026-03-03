@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 class ChatRequest(BaseModel):
@@ -23,12 +23,32 @@ class StreamChunk(BaseModel):
 class StreamError(BaseModel):
     error: str
 
+class IntentScore(BaseModel):
+    name: str # smalltalk, faq, not-able-classify, out-of-domain
+    score: float = Field(ge=0, le=1)
+
 class QueryClassification(BaseModel):
-    intent: str  # smalltalk, faq, not-able-classify, out-of-domain
+    intents: List[IntentScore]
+    intent: str  # Top intent for backward compatibility or direct routing
     domain: str  # general, technical, support, etc.
     safety: str  # safe, unsafe
     required_tools: List[str]
     complexity_level: str  # low, medium, high
+
+class FAQResponse(BaseModel):
+    message: str
+    score: float = Field(ge=0, le=1)
+
+class SmallTalkResponse(BaseModel):
+    message: str
+    score: float = Field(ge=0, le=1)
+
+class ScoredQuery(BaseModel):
+    query: str
+    score: float = Field(ge=0, le=1)
+
+class QueryExpansion(BaseModel):
+    expanded_queries: List[ScoredQuery]
 
 # Authentication Schemas
 class LoginRequest(BaseModel):

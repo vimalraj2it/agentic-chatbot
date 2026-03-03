@@ -6,6 +6,7 @@ from src.nodes.rag_nodes import reference_docs_faiss_node, reference_docs_pineco
 from src.core.logging_config import get_logger
 from src.core.config import settings
 from src.services.llm_service import clean_messages
+from src.models.schemas import FAQResponse
 
 logger = get_logger(__name__)
 
@@ -32,21 +33,43 @@ async def faq_llm_node(state: AgentState):
         {"role": "system", "content": state.get("role_rules", "")},
         {"role": "system", "content": state.get("user_profile", "")},
         {"role": "system", "content": state.get("guardrails", "")},
-        {"role": "system", "content": f"# REFERENCE DOCUMENT\n{state.get('reference_docs', '')}"}
+        {"role": "system", "content": f"# REFERENCE DOCUMENT\n{state.get('reference_docs', '')}"},
+        {"role": "system", "content": "# OUTPUT FORMAT\nResponse MUST be a valid JSON object.\nFormat: {\"message\": \"your answer here\", \"score\": 0.9}\nCONFIDENCE SCORE: Must be a float between 0.0 and 1.0."}
     ]
     
     # Add history and current user message
     messages += state.get("history", [])
-    messages.append({"role": "user", "content": state["user_message"]})
     
+    # Use expanded query if available for better context in generation
+    user_msg = state["user_message"]
+    if state.get("expanded_queries"):
+        user_msg = state["expanded_queries"][0]["query"]
+        logger.info(f"Using expanded query for FAQ generation: {user_msg}")
+        
+    messages.append({"role": "user", "content": user_msg})
     # Clean and send
-    
     cleaned_messages = clean_messages(messages)
     
-
-    response = await get_chat_completion(messages=cleaned_messages, model=settings.FAQ_MODEL)
-    content = response.choices[0].message.content
-    return {"assistant_response": content}
+    try:
+        response = await get_chat_completion(
+            messages=cleaned_messages, 
+            model=settings.FAQ_MODEL,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "faq_response",
+                    "schema": FAQResponse.model_json_schema(),
+                    "strict": True
+                }
+            }
+        )
+        
+        content = response.choices[0].message.content
+        data = FAQResponse.model_validate_json(content)
+        return {"assistant_response": data.message}
+    except Exception as e:
+        logger.error(f"Error in faq_llm_node: {e}")
+        return {"assistant_response": "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a moment."}
 
 # Build FAQ Graph
 builder = StateGraph(AgentState)
@@ -54,7 +77,6 @@ builder.add_node("set_intent", set_active_intent)
 builder.add_node("role_injection", role_injection_node)
 builder.add_node("gruadrail_node", gruadrail_node)
 builder.add_node("user_profile", user_profile_node)
-
 
 builder.add_node("reference_docs", reference_docs_node)
 builder.add_node("reference_docs_faiss", reference_docs_faiss_node)
@@ -66,6 +88,7 @@ builder.add_edge(START, "set_intent")
 builder.add_edge("set_intent", "role_injection")
 builder.add_edge("role_injection", "gruadrail_node")
 builder.add_edge("gruadrail_node", "user_profile")
+
 builder.add_conditional_edges(
     "user_profile",
     router_condition_for_reference_docs,
