@@ -31,6 +31,7 @@ class DocumentService:
             encode_kwargs={'normalize_embeddings': settings.EMBEDDING_NORMALIZE}
         )
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        self._indices = {} # Cache for loaded indices: {doc_id: vector_store}
 
     @property
     def docs_col(self):
@@ -149,5 +150,61 @@ class DocumentService:
             
         # 3. Delete from DB
         await self.docs_col.delete_one({"id": doc_id})
+        
+        # 4. Remove from cache
+        if doc_id in self._indices:
+            del self._indices[doc_id]
+
+    async def search_documents(self, query: str, top_k: int = 5) -> List[Dict]:
+        """Searches across all loaded documents and returns top snippets"""
+        logger.info(f"Searching FAISS for: {query}")
+        
+        # Get all loaded documents
+        loaded_docs = await self.docs_col.find({"status": "loaded"}).to_list(length=100)
+        if not loaded_docs:
+            logger.warning("No documents loaded in FAISS")
+            return []
+            
+        all_results = []
+        
+        for doc in loaded_docs:
+            doc_id = doc["id"]
+            filename = doc["filename"]
+            
+            # Load index from cache or disk
+            if doc_id not in self._indices:
+                save_path = os.path.join(self.index_dir, f"{doc_id}.faiss")
+                if os.path.exists(save_path):
+                    try:
+                        self._indices[doc_id] = FAISS.load_local(
+                            save_path, 
+                            self.embeddings, 
+                            allow_dangerous_deserialization=True
+                        )
+                    except Exception as e:
+                        logger.error(f"Error loading index for {filename}: {e}")
+                        continue
+                else:
+                    logger.warning(f"Index file missing for loaded document: {filename}")
+                    continue
+            
+            # Search in this document's index
+            vector_store = self._indices[doc_id]
+            results_with_scores = vector_store.similarity_search_with_score(query, k=top_k)
+            
+            for doc_snippet, score in results_with_scores:
+                all_results.append({
+                    "content": doc_snippet.page_content,
+                    "metadata": doc_snippet.metadata,
+                    "score": float(score),
+                    "filename": filename
+                })
+        
+        # Sort by score (lower is better for L2 distance, but FAISS by default usually returns scores where smaller is more similar)
+        # LangChain's similarity_search_with_score returns (doc, score)
+        # Sort so most relevant are at the top
+        all_results.sort(key=lambda x: x["score"])
+        
+        return all_results[:top_k]
 
 document_service = DocumentService()
