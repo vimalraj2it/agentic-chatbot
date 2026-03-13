@@ -28,6 +28,12 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     task_time_limit=300, # 5 minutes
+    beat_schedule={
+        "inventory-monitor-hourly": {
+            "task": "src.services.tasks.inventory_monitor_task",
+            "schedule": 3600.0, # every hour
+        },
+    },
 )
 
 @worker_process_init.connect

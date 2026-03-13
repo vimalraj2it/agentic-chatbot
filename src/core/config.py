@@ -9,7 +9,16 @@ class Settings(BaseSettings):
     CLASSIFIER_MODEL: str = "gpt-4o-mini"
     SMALLTALK_MODEL: str = "gpt-4o-mini"
     FAQ_MODEL: str = "gpt-4o"
+    ORDER_STATUS_MODEL: str = "gpt-4o-mini"
+    CREATE_ORDER_MODEL: str = "gpt-4o-mini"
     RAG_TYPE: str = "text"
+    
+    INVENTORY_CHECK_INTERVAL: int = 3600 # 1 hour
+    
+    # LangSmith Tracing
+    LANGCHAIN_TRACING_V2: str = "false"
+    LANGCHAIN_PROJECT: str = "wechat-assistant"
+    LANGCHAIN_API_KEY: str = ""
     
     EMBEDDING_MODEL: str = "BAAI/bge-small-en"
     EMBEDDING_DEVICE: str = "cpu"
@@ -20,6 +29,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     MISTRAL_API_KEY: str = ""
+    PINECONE_API_KEY: str = ""
+    PINECONE_CLOUD: str = "aws"
+    PINECONE_REGION: str = "us-east-1"
     
     LOG_LEVEL: str = "INFO"
     LITELLM_PROXY_URL: str = ""
@@ -29,6 +41,7 @@ class Settings(BaseSettings):
     
     MONGODB_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "chat_app"
+    USE_CELERY: bool = True  # Set to False to run without Celery
 
     SYSTEM_RULES: str = """
     You are a helpful and professional AI assistant.

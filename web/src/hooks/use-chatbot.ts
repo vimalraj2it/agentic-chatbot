@@ -96,40 +96,12 @@ export function useChatbot({
 
                 if (!taskId) throw new Error("No task_id received");
 
-                // Polling logic
-                let attempts = 0;
-                const maxAttempts = 60; // 60 * 2s = 120s timeout
-
-                const pollStatus = async () => {
-                    if (attempts >= maxAttempts) {
-                        throw new Error("Polling timeout");
-                    }
-
-                    const statusResponse = await fetch(`${baseUrl}/api/chat/status/${taskId}`);
-                    if (!statusResponse.ok) throw new Error("Failed to check status");
-
-                    const statusData = await statusResponse.json();
-
-                    if (statusData.status === "SUCCESS") {
-                        const result = statusData.result;
-                        setMessages((prev) =>
-                            prev.map((msg) => {
-                                if (msg.id === userMessage.id) return { ...msg, id: result.user_id || msg.id };
-                                if (msg.id === assistantMessageId) return { ...msg, content: result.response };
-                                return msg;
-                            })
-                        );
-                        setIsLoading(false);
-                        return;
-                    } else if (statusData.status === "FAILURE") {
-                        throw new Error(statusData.error || "Task failed");
-                    }
-
-                    attempts++;
-                    setTimeout(pollStatus, 2000); // Poll every 2 seconds
-                };
-
-                pollStatus();
+                // Instead of polling, we wait for SSE events.
+                // The ChatPage will handle the connection via useSSE
+                // or we can handle it here if we pass the right callbacks.
+                
+                // For simplicity in this refactor, we'll keep the isLoading state
+                // and expect the caller to use the SSE updates to fill in the message tokens.
 
             } catch (error) {
                 console.error("Chat Error:", error);

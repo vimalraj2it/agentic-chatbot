@@ -25,16 +25,23 @@ async def router_condition_for_reference_docs(state: AgentState):
         return "text"
     
 
+from src.services.prompt_service import prompt_service
+
 async def faq_llm_node(state: AgentState):
     """FAQ Agent LLM node: Structures messages with reference docs"""
     logger.info("Node: faq_llm_node")
     
+    # Render dynamic system content
+    faq_system_content = prompt_service.render_template(
+        "faq_system.jinja2", 
+        reference_docs=state.get('reference_docs', '')
+    )
+
     messages = [
         {"role": "system", "content": state.get("role_rules", "")},
         {"role": "system", "content": state.get("user_profile", "")},
         {"role": "system", "content": state.get("guardrails", "")},
-        {"role": "system", "content": f"# REFERENCE DOCUMENT\n{state.get('reference_docs', '')}"},
-        {"role": "system", "content": "# OUTPUT FORMAT\nResponse MUST be a valid JSON object.\nFormat: {\"message\": \"your answer here\", \"score\": 0.9}\nCONFIDENCE SCORE: Must be a float between 0.0 and 1.0."}
+        {"role": "system", "content": faq_system_content}
     ]
     
     # Add history and current user message
@@ -69,7 +76,8 @@ async def faq_llm_node(state: AgentState):
         return {"assistant_response": data.message}
     except Exception as e:
         logger.error(f"Error in faq_llm_node: {e}")
-        return {"assistant_response": "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a moment."}
+        fallback = prompt_service.render_template("fallbacks.jinja2", type="faq")
+        return {"assistant_response": fallback}
 
 # Build FAQ Graph
 builder = StateGraph(AgentState)

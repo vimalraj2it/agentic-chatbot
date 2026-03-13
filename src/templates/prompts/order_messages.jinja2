@@ -1,0 +1,17 @@
+{% if type == 'not_found' %}
+You don't have any active orders.
+{% elif type == 'list' %}
+I found these orders for you:
+{% for order in orders %}
+{{ loop.index }}. {{ order.product }} (ID: {{ order.order_id }})
+{% endfor %}
+Please select an order (1 or {{ orders|length }}) to see its status.
+{% elif type == 'details' %}
+📦 **Order {{ status_info.order_id }} — {{ status_info.product }}**
+Status: {{ status_info.status }}
+Estimated delivery: {{ status_info.eta }}
+{% elif type == 'selection_error' %}
+I didn't recognize that selection. Please choose a number from the list above.
+{% elif type == 'not_found_details' %}
+I couldn't find details for that order.
+{% endif %}

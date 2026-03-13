@@ -10,6 +10,8 @@ logger = get_logger(__name__)
 async def set_active_intent(state: AgentState):
     return {"active_intent": "smalltalk"}
 
+from src.services.prompt_service import prompt_service
+
 async def smalltalk_llm_node(state: AgentState):
     """Smalltalk Agent LLM node: Structures messages as separate units"""
     logger.info("Node: smalltalk_llm_node")
@@ -48,7 +50,8 @@ async def smalltalk_llm_node(state: AgentState):
         return {"assistant_response": data.message}
     except Exception as e:
         logger.error(f"Error in smalltalk_llm_node: {e}")
-        return {"assistant_response": "Hey there! I'm doing a bit of system maintenance at the moment. How can I help you otherwise?"}
+        fallback = prompt_service.render_template("fallbacks.jinja2", type="smalltalk")
+        return {"assistant_response": fallback}
 
 # Build Smalltalk Graph
 builder = StateGraph(AgentState)

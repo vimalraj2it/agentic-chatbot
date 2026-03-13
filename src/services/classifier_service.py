@@ -48,23 +48,7 @@ class ClassifierService:
             content = response.choices[0].message.content
             logger.info(f"Raw Classifier Response: {content}")
             
-            # Clean JSON if wrapped in markdown
-            json_str = content
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                json_str = content.split("```")[1].split("```")[0].strip()
-            else:
-                # If no markdown, try to find the first '{' and last '}'
-                try:
-                    start = content.find("{")
-                    end = content.rfind("}") + 1
-                    if start != -1 and end != 0:
-                        json_str = content[start:end]
-                except:
-                    pass
-            
-            result = QueryClassification.model_validate_json(json_str)
+            result = QueryClassification.model_validate_json(content)
             logger.info(f"Parsed Classification: {result}")
             return result
             
@@ -118,12 +102,6 @@ class ClassifierService:
             )
             
             content = response.choices[0].message.content
-            # Clean JSON if wrapped in markdown
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-            
             return QueryClassification.model_validate_json(content)
             
         except Exception as e:

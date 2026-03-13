@@ -60,6 +60,30 @@ class UserResponse(BaseModel):
     name: str
     role: str
 
+class OrderExtraction(BaseModel):
+    product: Optional[str] = None
+    quantity: Optional[int] = 1
+    confirm: Optional[bool] = None
+    is_cancel: Optional[bool] = False
+
+# Order-related Schemas
+class OrderStatusResponse(BaseModel):
+    order_id: str
+    status: str
+    estimated_delivery: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+
+class DraftOrder(BaseModel):
+    product: str
+    quantity: int
+    address: str
+    total_price: Optional[float] = None
+
+class CreateOrderResponse(BaseModel):
+    order_id: str
+    status: str # "draft", "confirmed"
+    draft_details: Optional[DraftOrder] = None
+
 # Session Schemas
 class SessionCreate(BaseModel):
     title: Optional[str] = "New Chat"

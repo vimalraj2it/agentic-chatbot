@@ -1,0 +1,9 @@
+{% if type == 'ask_product' %}
+What product would you like to order?
+{% elif type == 'ask_confirmation' %}
+I've created a draft for {{ product }}. Should I confirm this order?
+{% elif type == 'success' %}
+Excellent! Your order has been confirmed. Confirmation ID: {{ confirmation_id }}
+{% elif type == 'cancelled' %}
+Order cancelled. Let me know if you need anything else.
+{% endif %}

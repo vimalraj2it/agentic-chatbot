@@ -37,7 +37,7 @@ export default function SessionsPage() {
         if (!user) return;
         try {
             const newSession = await apiClient.createSession(user.id);
-            router.push(`/chat/${newSession.id}`);
+            router.push(`/chat/?id=${newSession.id}`);
         } catch (error) {
             console.error(error);
         }
@@ -108,7 +108,7 @@ export default function SessionsPage() {
                     {sessions.map((session) => (
                         <button
                             key={session.id}
-                            onClick={() => router.push(`/chat/${session.id}`)}
+                            onClick={() => router.push(`/chat/?id=${session.id}`)}
                             className="flex flex-col items-start p-6 bg-card border border-border rounded-2xl hover:border-primary/50 hover:shadow-md transition-all text-left relative overflow-hidden group"
                         >
                             <div className="flex items-center gap-3 mb-2">

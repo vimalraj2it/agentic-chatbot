@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, useEffect, useState, use } from "react";
+import { useRef, useEffect, useState, Suspense } from "react";
 import { Bot, Trash2, Terminal, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useChatbot, Message } from "@/hooks/use-chatbot";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
 import { useSSE } from "@/hooks/use-sse";
 
-export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
-    const sessionId = resolvedParams.id;
+function ChatContent() {
+    const searchParams = useSearchParams();
+    const sessionId = searchParams.get("id");
     const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
     const [skip, setSkip] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -38,13 +38,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         setPendingImages
     } = useChatbot({
         body: {
-            session_id: sessionId,
+            session_id: sessionId || "",
             user_id: user?.id
         }
     });
 
     const { connect, disconnect } = useSSE({
-        sessionId,
+        sessionId: sessionId || "",
         onToken: (token) => {
             setMessages((prev) => {
                 const newMessages = [...prev];
@@ -74,7 +74,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
     useEffect(() => {
         if (!sessionId) return;
-        // Fetch initial history for this session
         fetchHistory(0);
     }, [sessionId]);
 
@@ -88,7 +87,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     if (skipCount === 0) {
                         setMessages(history);
                     } else {
-                        // Prepend older messages
                         setMessages((prev) => [...history, ...prev]);
                     }
 
@@ -139,7 +137,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         <Bot size={22} />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold tracking-tight">shadcn Chatbot</h1>
+                        <h1 className="text-lg font-bold tracking-tight">AI Assistant</h1>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">Session: {sessionId?.substr(0, 8) || "New"}</p>
                     </div>
                 </div>
@@ -214,5 +212,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
             </footer>
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ChatContent />
+        </Suspense>
     );
 }

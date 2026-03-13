@@ -39,6 +39,7 @@ This document serves as the "Source of Truth" for coding standards, architectura
 ### 4. Code Style & Logging
 - **Type Hinting**: Use Python type hints for all function signatures and complex variables.
 - **Logging**: Use the centralized `src.core.logging_config` for all loggers. Always include `session_id` or `user_id` in logs for traceability.
+- **Execution Tracing**: Use the `@log_execution` decorator from `src.core.logging_config` for all key methods (nodes, tools, services). This ensures consistent logging of method entry/exit with input arguments and return values.
 
 ---
 

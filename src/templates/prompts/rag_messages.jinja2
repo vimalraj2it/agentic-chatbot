@@ -1,0 +1,7 @@
+{% if type == 'snippet_header' %}
+--- Snippet from {{ source }} (Score: {{ score|round(4) }}) ---
+{{ content }}
+{% elif type == 'context_separator' %}
+
+# GENERAL CONTEXT
+{% endif %}

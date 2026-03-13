@@ -1,0 +1,4 @@
+{% if type == 'interruption_resume' %}
+
+Returning to your {{ agent_name|replace('_', ' ') }}: {% if step == 'awaiting_selection' %}Please select an order from the list above.{% elif step == 'awaiting_confirmation' %}Should I confirm that order for you?{% endif %}
+{% endif %}

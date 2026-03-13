@@ -1,0 +1,8 @@
+Extract order details from the user's message.
+User Message: {{ user_message }}
+
+Fields to extract:
+- product: The name of the item being ordered.
+- quantity: The amount (default to 1 if not specified).
+- confirm: True if the user is confirming a pending order, False if explicit cancellation.
+- is_cancel: True if the user wants to cancel the process.
