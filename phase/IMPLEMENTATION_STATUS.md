@@ -21,7 +21,12 @@
 | 7 | LangSmith & Observability | ✅ Done | 3 / 3 |
 | 8 | Frontend Updates | ✅ Done | 4 / 4 |
 | 9 | Project-wide Logging ⭐ | ✅ Done | 3 / 3 |
-| — | **TOTAL** | — | **52 / 52** |
+| 10 | Structured I/O Standardization | ✅ Done | 4 / 4 |
+| 11 | Technical Guideline Documentation | ✅ Done | 4 / 4 |
+| 12 | Doc Restructuring | ✅ Done | 4 / 4 |
+| 13 | Advanced RAG with Scraping | ✅ Done | 5 / 5 |
+| 14 | Admin Portal & Mgmt Tools | 📋 Planned | 0 / 5 |
+| — | **TOTAL** | — | **73 / 78** |
 
 ---
 
@@ -392,6 +397,73 @@ SSE → Frontend
 | `phase/phase_5_streaming.md` | 5 |
 | `phase/phase_9_logging.md` | 9 |
 | `phase/IMPLEMENTATION_STATUS.md` (modify) | - |
+
+---
+
+## Phase 10: Structured Input & Output Standardization
+
+> **Plan doc**: [phase_10_standardization.md](./phase_10_standardization.md)
+
+| # | Sub-Task | File | Status |
+|---|---|---|---|
+| 10.1 | Refactor Classifier for strict structured I/O | `src/services/classifier_service.py` | ✅ |
+| 10.2 | Upgrade CreateOrderAgent extraction | `src/graphs/create_order.py` | ✅ |
+| 10.3 | Standardize Agent Response models | `src/models/schemas.py` | ✅ |
+| 10.4 | Verify structured response_format usage | `src/services/llm_service.py` | ✅ |
+
+---
+
+## Phase 11: Detailed Technical Guideline Documentation
+
+> **Plan doc**: [phase_11_detailed_guidelines.md](./phase_11_detailed_guidelines.md)
+
+| # | Sub-Task | File | Status |
+|---|---|---|---|
+| 11.1 | Document Agent LLM Request/Response | `docs/agents/` | ✅ |
+| 11.2 | Document Tool Execution Schemas | `docs/standards.md` | ✅ |
+| 11.3 | Document A2A & Tool communication | `docs/architecture.md` | ✅ |
+| 11.4 | Document Memory & Context logic | `docs/architecture.md` | ✅ |
+
+---
+
+## Phase 12: Granular Documentation Restructuring
+
+> **Plan doc**: [phase_12_docs_restructuring.md](./phase_12_docs_restructuring.md)
+
+| # | Sub-Task | File | Status |
+|---|---|---|---|
+| 12.1 | Create modular `docs/` structure | (Directory) | ✅ |
+| 12.2 | Migrate monolothic guide content | `docs/` | ✅ |
+| 12.3 | Update README project indexing | `README.md` | ✅ |
+| 12.4 | Remove deprecated legacy doc files | (Multiple) | ✅ |
+
+---
+
+## Phase 13: Advanced RAG with Sitemap Scraping
+
+> **Plan doc**: [phase_13_advanced_rag.md](./phase_13_advanced_rag.md)
+
+| # | Sub-Task | File | Status |
+|---|---|---|---|
+| 13.1 | Implement Sitemap Discovery & Scraping | `src/services/scraping_service.py` | ✅ |
+| 13.2 | Implement High-fidelity HTML cleaning | `src/services/scraping_service.py` | ✅ |
+| 13.3 | Update Indexing pipeline for URLs | `src/rag/index_documents.py` | ✅ |
+| 13.4 | Enforce strict context prompts | `src/templates/prompts/` | ✅ |
+| 13.5 | Create `index_website` admin tool | `src/tools/rag_tools.py` | ✅ |
+
+---
+
+## Phase 14: Admin Portal & Management Tools
+
+> **Plan doc**: [phase_14_admin_tools.md](./phase_14_admin_tools.md)
+
+| # | Sub-Task | File | Status |
+|---|---|---|---|
+| 14.1 | Design Admin Dashboard doc | `docs/admin_dashboard.md` | 📋 |
+| 14.2 | Implement `index_website` UI trigger | `src/api/admin.py` | 📋 |
+| 14.3 | Implement Prompt Lab for templates | `src/api/admin.py` | 📋 |
+| 14.4 | Implement system monitoring UI | `web/src/pages/Admin/` | 📋 |
+| 14.5 | Implement configuration override UI | `src/api/admin.py` | 📋 |
 
 ---
 

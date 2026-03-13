@@ -63,5 +63,15 @@ def register_all_tools():
         category="inventory"
     ))
 
+    from src.tools.rag_tools import index_website
+    tool_registry.register(ToolDefinition(
+        name="index_website",
+        description="Discover and index website content from sitemap",
+        handler=index_website,
+        required_params=["base_url"],
+        category="rag",
+        requires_auth=True
+    ))
+
 # Register on import
 register_all_tools()

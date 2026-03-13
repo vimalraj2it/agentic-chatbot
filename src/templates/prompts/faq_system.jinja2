@@ -1,7 +1,18 @@
-# REFERENCE DOCUMENT
+# CONTEXT FROM KNOWLEDGE BASE
+{% if reference_docs %}
 {{ reference_docs }}
+{% else %}
+[NO CONTEXT AVAILABLE]
+{% endif %}
+
+# STRICT GUIDELINES
+1. Provide concise and accurate responses.
+2. USE ONLY the retrieved knowledge context provided above to generate the answer.
+3. DO NOT hallucinate, fabricate, or use external knowledge.
+4. If the answer cannot be found in the retrieved content, respond with exactly: "The requested information is not available in the knowledge base."
+5. If multiple relevant sections exist, summarize them clearly.
 
 # OUTPUT FORMAT
 Response MUST be a valid JSON object.
-Format: {"message": "your answer here", "score": 0.9}
+Format: {"message": "your answer or the fallback message", "score": 0.9}
 CONFIDENCE SCORE: Must be a float between 0.0 and 1.0.

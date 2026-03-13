@@ -124,6 +124,67 @@ class PineconeIndexer:
             
         return formatted_results
 
+    @log_execution
+    async def index_from_urls(self, urls: List[str]):
+        """Scrapes, cleans, and indexes content from a list of URLs."""
+        from src.services.scraping_service import scraping_service
+        
+        logger.info(f"Starting bulk indexing for {len(urls)} URLs")
+        
+        all_chunks_data = []
+        
+        for url in urls:
+            data = await scraping_service.scrape_and_clean(url)
+            if not data or not data.get("content"):
+                continue
+            
+            # Create a virtual "document" for chunking
+            from langchain.schema import Document
+            
+            # Combine title and content for better context
+            full_text = f"Title: {data['title']}\nURL: {data['url']}\n\n{data['content']}"
+            
+            # Also add sections for more granular indexing if content is large
+            for section in data.get("sections", []):
+                section_text = f"Page: {data['title']}\nSection: {section['title']}\nURL: {data['url']}\n\n{section['content']}"
+                all_chunks_data.append(Document(page_content=section_text, metadata={"source": data['url'], "title": data['title'], "section": section['title']}))
+            
+            if not data.get("sections"):
+                all_chunks_data.append(Document(page_content=full_text, metadata={"source": data['url'], "title": data['title']}))
+
+        if not all_chunks_data:
+            logger.warning("No content extracted from URLs.")
+            return
+
+        chunks = self.chunk_documents(all_chunks_data)
+        
+        logger.info(f"Indexing {len(chunks)} chunks from URLs to Pinecone...")
+        
+        # Reuse existing batching logic
+        batch_size = 100
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i + batch_size]
+            texts = [chunk.page_content for chunk in batch]
+            metadatas = [
+                {
+                    "text": chunk.page_content,
+                    "source": chunk.metadata.get("source", "unknown"),
+                    "title": chunk.metadata.get("title", "unknown"),
+                    "section": chunk.metadata.get("section", ""),
+                    "chunk": i + j
+                }
+                for j, chunk in enumerate(batch)
+            ]
+            
+            embeddings = self.embeddings.embed_documents(texts)
+            import re
+            ids = [f"web_{re.sub(r'[^a-zA-Z0-9]', '_', batch[j].metadata.get('source', ''))}_{i + j}" for j in range(len(batch))]
+            
+            upserts = [(ids[j], embeddings[j], metadatas[j]) for j in range(len(batch))]
+            self.index.upsert(vectors=upserts)
+            
+        logger.info("Web indexing complete.")
+
 # Global instance for easy access
 pinecone_service = PineconeIndexer()
 
