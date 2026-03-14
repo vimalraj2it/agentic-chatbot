@@ -22,7 +22,13 @@ Each agent is a self-contained LangGraph sub-graph:
 - **AgentState**: A TypedDict tracking chat history, active intent, and workflow-specific metadata.
 - **MongoDB**: Used for long-term checkpointing and session management via `ConversationStateManager`.
 
-### 4. Observability
-- **@log_execution**: Standardized decorator for method entry/exit logging.
+### 4. Knowledge Management (Advanced RAG)
+- **ScrapingService**: Orchestrates sitemap discovery and URL crawling.
+- **High-Fidelity Cleaning**: Transformer-like logic to strip boilerplate while preserving semantic structure.
+- **Pinecone**: Low-latency vector database for semantic search.
+
+### 5. Management & Observability
+- **Admin Portal**: Dedicated endpoints for RAG control and Prompt Engineering.
+- **Jinja2 Registry**: Dynamic prompt templates managed through the `PromptLab`.
 - **LangSmith**: Full trace visualization for every LLM and Tool call.
-- **Cost Tracking**: Usage metrics collected at the `llm_service.py` level.
+- **Logging Decorator**: Standardized `@log_execution` for method tracing.

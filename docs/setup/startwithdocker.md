@@ -16,6 +16,9 @@ Open [`.docker.env`](file:///.docker.env) and add your API keys:
 - `ANTHROPIC_API_KEY`
 - `GEMINI_API_KEY`
 - `GROQ_API_KEY`
+- `MISTRAL_API_KEY`
+- `PINECONE_API_KEY` (along with `PINECONE_ENV`, `PINECONE_CLOUD`, `PINECONE_REGION`)
+- **LangSmith** variables (optional, for tracing): `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, etc.
 
 ## 3. Launch
 Run the orchestration command:

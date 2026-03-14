@@ -11,6 +11,19 @@ Create a `.env` with:
 - `REDIS_URL`
 - `OPENAI_API_KEY`
 - `PINECONE_API_KEY`
+- `PINECONE_INDEX_NAME`
+- `EMBEDDING_MODEL` (default: `sentence-transformers/all-MiniLM-L6-v2`)
+
+## 3. Installation
+```bash
+# Create virtual environment
+uv venv
+source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
+
+# Install dependencies (from requirements.txt if present)
+uv pip install -r requirements.txt
+uv pip install pinecone-client trafilatura beautifulsoup4
+```
 
 ## 3. Running the App
 ```bash

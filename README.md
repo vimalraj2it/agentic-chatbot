@@ -39,8 +39,8 @@ cp .env.example .docker.env
 
 For detailed, step-by-step instructions based on your environment, see:
 
--   🚀 **[Start with Docker (Recommended)](file:///startwithdocker.md)**
--   💻 **[Start without Docker (Manual)](file:///startwithoutdocker.md)**
+-   🚀 **[Start with Docker (Recommended)](docs/setup/startwithdocker.md)**
+-   💻 **[Start without Docker (Manual)](docs/setup/startwithoutdocker.md)**
 
 Quick launch with Docker:
 ```bash

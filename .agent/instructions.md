@@ -73,6 +73,7 @@ This document serves as the "Source of Truth" for coding standards, architectura
 ---
 
 ## ✅ Best Practices
+- **Package Management**: ALWAYS use `uv` instead of `pip` for package management and virtual environments (e.g., `uv pip install`, `uv run`). Do not use `pip`.
 - **Small Commits**: Make atomic commits that focus on a single feature or fix.
 - **Validation**: Always verify changes by running existing tests (e.g., `uv run python src/tests/test_split_prompts.py`).
 - **Environment Variables**: Never hardcode secrets. Use `.env` or `.docker.env` managed via `pydantic-settings`.

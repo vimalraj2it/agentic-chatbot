@@ -14,9 +14,15 @@ Copy the environment template to `.env`:
 ```bash
 cp .env.example .env
 ```
-Ensure `USE_LITELLM_SERVER=False` in [`.env`](file:///.env) to call providers directly, and add your API keys.
+Ensure `USE_LITELLM_SERVER=False` in [`.env`](file:///.env) to call providers directly, and add your required API keys:
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `MISTRAL_API_KEY`
+- `PINECONE_API_KEY` (along with `PINECONE_ENV`, `PINECONE_CLOUD`, `PINECONE_REGION`)
+- **LangSmith** variables (optional, for tracing): `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, etc.
 
 ## 3. Run the Services (Separate Terminals)
+
+> **Minimal Mode**: If you want to run the application entirely synchronously without Celery or Redis, simply set `USE_CELERY=False` in your `.env`. If you do this, you can skip **Terminal B** entirely. 
+> Additionally, if you don't need the admin dashboard, you can skip **Terminal C** (Streamlit).
 
 ### Terminal A: FastAPI Backend
 ```bash
@@ -51,36 +57,37 @@ pnpm run dev
 ## 💡 Pro Tip
 If you want to use the **LiteLLM Server** without Docker, you must run it manually:
 ```bash
-pip install 'litellm[proxy]'
+uv pip install 'litellm[proxy]'
 litellm --config litellm_config.yaml --port 4000
 ```
 Then set `USE_LITELLM_SERVER=True` in your `.env`.
 
-## 5. Troubleshooting (Windows)
+## 5. Troubleshooting (Windows / Git Bash)
 
 ### Find and Kill Services by Port
 If a port is already in use (e.g., 8000 or 3000), use these commands:
 
 1. **Find PID by port (e.g., 8000):**
-   ```powershell
-   netstat -ano | findstr :8000
+   ```bash
+   netstat -ano | grep :8000
    ```
-   *The PID is the number in the last column.*
+   *The PID is the number in the very last column.*
 
 2. **Kill process by PID:**
-   ```powershell
-   taskkill /F /PID <PID_NUMBER>
+   *(Wait for the previous command to give you the PID. If the output showed PID 31036, you would run: `taskkill -F -PID 31036`)*
+   ```bash
+   taskkill -F -PID <PID_NUMBER>
    ```
 
 ### Stop Running Celery Workers
 If Celery workers are stuck in the background:
 
 1. **Find Celery/Python processes:**
-   ```powershell
-   tasklist | findstr python
+   ```bash
+   tasklist | grep python
    ```
 
 2. **Kill all Python processes (Warning: stops FastAPI too):**
-   ```powershell
-   taskkill /F /IM python.exe /T
+   ```bash
+   taskkill -F -IM python.exe -T
    ```
