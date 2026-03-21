@@ -17,35 +17,23 @@ class WeatherAgent(A2AServer):
         examples="I am a weather agent for getting weather forecast from Open weather"
     )
     def get_weather(self, location):
-        """Get real weather for a location using OpenWeatherMap API."""
-        api_key = os.getenv("OPENWEATHER_API_KEY")
-        if not api_key:
-            return "Weather service not available (missing API key)."
-        
-        try:
-            url = (
-                f"https://api.openweathermap.org/data/2.5/weather?"
-                f"q={location}&units=imperial&appid={api_key}"
-            )
-            logging.debug(f"Request URL: {url}")  # Log the full request URL
-            response = requests.get(url, timeout=5)
-            response.raise_for_status()
-            logging.debug(f"Response Status Code: {response.status_code}")  # Log status code
-            logging.debug(f"Response Text: {response.text}")  # Log raw response text
-            
-            data = response.json()
-            
-            temp = data["main"]["temp"]
-            description = data["weather"][0]["description"]
-            city_name = data["name"]
-            logging.debug(f"Parsed Data: Temp = {temp}, Description = {description}, City = {city_name}")
-            
-            return f"The weather in {city_name} is {description} with a temperature of {temp}°F."
-        
-        except requests.RequestException as e:
-            return f"Error fetching weather: {e}"
-        except (KeyError, TypeError):
-            return "Could not parse weather data."
+        """Get weather for a location (mock data for demo)."""
+        # Hardcoded mock weather data for demo purposes
+        mock_data = {
+            "paris": {"temp": 72, "description": "clear sky", "name": "Paris"},
+            "london": {"temp": 61, "description": "overcast clouds", "name": "London"},
+            "new york": {"temp": 78, "description": "sunny", "name": "New York"},
+            "tokyo": {"temp": 68, "description": "partly cloudy", "name": "Tokyo"},
+            "sydney": {"temp": 65, "description": "light rain", "name": "Sydney"},
+            "dubai": {"temp": 95, "description": "clear sky", "name": "Dubai"},
+            "rome": {"temp": 75, "description": "sunny", "name": "Rome"},
+        }
+
+        loc_key = location.lower().strip()
+        data = mock_data.get(loc_key, {"temp": 70, "description": "partly cloudy", "name": location.title()})
+
+        logging.info(f"Mock weather for {location}: {data}")
+        return f"The weather in {data['name']} is {data['description']} with a temperature of {data['temp']}°F."
     
     def handle_task(self, task):
         # Extract location from message

@@ -16,32 +16,38 @@ class BraveSearchAgent(A2AServer):
         examples="Search 'must visit places in utah in may'"
     )
     def search(self, query: str):
-        """Perform search using Brave Search API"""
-        api_key = os.getenv("BRAVE_API_KEY")
-        if not api_key:
-            return "Search service not available (missing Brave API key)."
-        headers = {
-            "Accept": "application/json",
-            "X-Subscription-Token": api_key,
-        }
-        url = "https://api.search.brave.com/res/v1/web/search"
-        params = {"q": query, "count": 5}
-        try:
-            response = requests.get(url, headers=headers, params=params, timeout=5)
-            response.raise_for_status()
-            data = response.json()
-            results = data.get("web", {}).get("results", [])
-            if not results:
-                return "No search results found."
-            summary = "\n".join(
-                [f"- {r.get('title')}: {r.get('url')}" for r in results]
-            )
-            return f"Top results for '{query}':\n{summary}"
-        except requests.RequestException as e:
-            logging.error(f"Error during Brave search: {e}")
-            return f"Search failed: {e}"
-        except Exception as e:
-            return f"Unexpected error: {e}"
+        """Perform search (mock data for demo)."""
+        # Hardcoded mock search results for demo purposes
+        query_lower = query.lower()
+
+        if "outdoor" in query_lower or "park" in query_lower:
+            results = [
+                "Visit the Luxembourg Gardens for a scenic walk",
+                "Explore Tuileries Garden near the Louvre",
+                "Bike along the Seine River banks",
+                "Picnic at Champ de Mars with Eiffel Tower views",
+                "Hike in Bois de Boulogne park",
+            ]
+        elif "indoor" in query_lower or "museum" in query_lower:
+            results = [
+                "Tour the Louvre Museum — world's largest art museum",
+                "Visit Musée d'Orsay for Impressionist masterpieces",
+                "Explore Centre Pompidou for modern art",
+                "Discover the Catacombs of Paris underground",
+                "Enjoy shopping at Galeries Lafayette",
+            ]
+        else:
+            results = [
+                "Visit the Eiffel Tower — iconic landmark",
+                "Explore the Louvre Museum",
+                "Walk through Montmartre and visit Sacré-Cœur",
+                "Take a Seine River cruise",
+                "Stroll the Champs-Élysées to the Arc de Triomphe",
+            ]
+
+        logging.info(f"Mock search for: {query}")
+        summary = "\n".join([f"- {r}" for r in results])
+        return f"Top recommendations for '{query}':\n{summary}"
     def handle_task(self, task):
         message_data = task.message or {}
         content = message_data.get("content", {})
