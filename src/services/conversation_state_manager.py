@@ -44,7 +44,16 @@ class ConversationStateManager:
     """
 
     def __init__(self):
-        self.collection = db.get_collection("conversation_states")
+        # We don't initialize the collection here because the database might not be connected yet.
+        pass
+
+    @property
+    def collection(self):
+        """Lazy-loaded collection property."""
+        if db.db is None:
+            # Fallback if accessed before connection (should not happen in production flow)
+            logger.warning("Database not connected when accessing ConversationStateManager.collection")
+        return db.db["conversation_states"]
 
     async def get(self, session_id: str) -> ConversationState:
         """Fetch state for a session. Returns empty state if none exists or expired."""

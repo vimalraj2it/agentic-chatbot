@@ -2,7 +2,7 @@ import os
 from typing import List, Dict, Any
 from pinecone import Pinecone, ServerlessSpec
 from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from src.core.config import settings
 from src.core.logging_config import get_logger, log_execution

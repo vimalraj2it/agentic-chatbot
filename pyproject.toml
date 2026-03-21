@@ -28,5 +28,6 @@ dependencies = [
     "python-multipart>=0.0.22",
     "langchain-huggingface>=1.2.0",
     "sse-starlette>=3.3.2",
-    "pinecone-client>=6.0.0",
+    "pinecone>=8.1.0",
+    "langchain-text-splitters>=1.1.1",
 ]

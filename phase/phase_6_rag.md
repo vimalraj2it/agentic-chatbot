@@ -22,7 +22,7 @@ import os
 import argparse
 from typing import List, Dict
 from pinecone import Pinecone, ServerlessSpec
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from sentence_transformers import SentenceTransformer
 from src.core.config import settings

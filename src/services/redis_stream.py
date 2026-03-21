@@ -17,12 +17,20 @@ class RedisStreamService:
     """
 
     def __init__(self):
-        self.redis_url = settings.REDIS_URL
         self._redis: redis.Redis = None
 
     async def get_redis(self) -> redis.Redis:
         if self._redis is None:
-            self._redis = redis.from_url(self.redis_url, decode_responses=True)
+            try:
+                # Lazy-load redis_url from settings
+                redis_url = settings.REDIS_URL
+                self._redis = redis.from_url(redis_url, decode_responses=True)
+                # Quick ping to verify connectivity
+                await self._redis.ping()
+            except Exception as e:
+                logger.warning(f"Failed to connect to Redis at {settings.REDIS_URL if hasattr(settings, 'REDIS_URL') else 'N/A'}: {e}")
+                self._redis = None
+                raise e
         return self._redis
 
     @log_execution

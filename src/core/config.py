@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "chat_app"
     USE_CELERY: bool = True  # Set to False to run without Celery
 
+    # Redis/Celery
+    REDIS_URL: str = "redis://localhost:6379/0"
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+
     SYSTEM_RULES: str = """
     You are a helpful and professional AI assistant.
     Personalize your responses based on the user's name and role provided in the context.
